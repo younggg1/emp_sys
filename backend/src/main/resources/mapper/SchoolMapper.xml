@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.SchoolMapper">
+
+    <!-- 获取所有学校列表 -->
+    <select id="getAllSchools" resultType="com.empsys.backend.entity.School">
+        SELECT * FROM school
+        ORDER BY school_id
+    </select>
+    
+    <!-- 根据ID获取学校详情 -->
+    <select id="getSchoolById" resultType="com.empsys.backend.entity.School">
+        SELECT * FROM school
+        WHERE school_id = #{schoolId}
+    </select>
+    
+    <!-- 根据名称获取学校 -->
+    <select id="getSchoolByName" resultType="com.empsys.backend.entity.School">
+        SELECT * FROM school
+        WHERE name = #{name}
+    </select>
+    
+    <!-- 添加学校 -->
+    <insert id="insertSchool">
+        INSERT INTO school (school_id, name, address, contact)
+        VALUES (#{schoolId}, #{name}, #{address}, #{contact})
+    </insert>
+    
+    <!-- 更新学校信息 -->
+    <update id="updateSchool">
+        UPDATE school
+        SET name = #{name},
+            address = #{address},
+            contact = #{contact}
+        WHERE school_id = #{schoolId}
+    </update>
+    
+</mapper> 

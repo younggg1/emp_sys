@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.StudentMapper">
+
+    <!-- 学生信息结果映射 -->
+    <resultMap id="StudentMap" type="com.empsys.backend.entity.Student">
+        <id property="studentId" column="student_id"/>
+        <result property="schoolId" column="school_id"/>
+        <result property="name" column="name"/>
+        <result property="className" column="class_name"/>
+        <result property="college" column="college"/>
+        <result property="major" column="major"/>
+        <result property="counselorId" column="counselor_id"/>
+        <result property="employmentStatus" column="employment_status"/>
+    </resultMap>
+    
+    <!-- 获取学生详细信息 -->
+    <select id="getStudentInfo" resultMap="StudentMap">
+        SELECT 
+            s.student_id, s.school_id, s.name, s.class_name, s.college, s.major, 
+            s.counselor_id, s.employment_status
+        FROM 
+            student s
+        WHERE 
+            s.student_id = #{studentId}
+    </select>
+    
+    <!-- 获取指定辅导员管理的学生列表 -->
+    <select id="getStudentsByCounselor" resultMap="StudentMap">
+        SELECT 
+            s.student_id, s.school_id, s.name, s.class_name, s.college, s.major, 
+            s.counselor_id, s.employment_status
+        FROM 
+            student s
+        WHERE 
+            s.counselor_id = #{counselorId}
+    </select>
+    
+    <!-- 获取指定学校的所有学生 -->
+    <select id="getStudentsBySchool" resultMap="StudentMap">
+        SELECT 
+            s.student_id, s.school_id, s.name, s.class_name, s.college, s.major, 
+            s.counselor_id, s.employment_status
+        FROM 
+            student s
+        WHERE 
+            s.school_id = #{schoolId}
+    </select>
+    
+    <!-- 更新学生就业状态 -->
+    <update id="updateEmploymentStatus">
+        UPDATE student
+        SET employment_status = #{status}
+        WHERE student_id = #{studentId}
+    </update>
+    
+    <!-- 统计学校中各就业状态的学生人数 -->
+    <select id="countByEmploymentStatus" resultType="java.util.Map">
+        SELECT 
+            employment_status as status, 
+            COUNT(*) as count
+        FROM 
+            student
+        WHERE 
+            school_id = #{schoolId}
+        GROUP BY 
+            employment_status
+    </select>
+    
+</mapper> 

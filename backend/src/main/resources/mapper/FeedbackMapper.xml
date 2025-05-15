@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.FeedbackMapper">
+
+    <!-- 根据学生ID获取反馈记录 -->
+    <select id="getFeedbackByStudentId" resultType="com.empsys.backend.entity.FeedbackRecord">
+        SELECT * FROM feedback_record
+        WHERE student_id = #{studentId}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据辅导员ID获取反馈记录 -->
+    <select id="getFeedbackByCounselor" resultType="com.empsys.backend.entity.FeedbackRecord">
+        SELECT f.*
+        FROM feedback_record f
+        JOIN student s ON f.student_id = s.student_id
+        WHERE s.counselor_id = #{counselorId}
+        <if test="page != null">
+            LIMIT #{page.offset}, #{page.size}
+        </if>
+    </select>
+    
+    <!-- 统计辅导员管理的反馈记录总数 -->
+    <select id="countFeedbackByCounselor" resultType="java.lang.Integer">
+        SELECT COUNT(*) 
+        FROM feedback_record f
+        JOIN student s ON f.student_id = s.student_id
+        WHERE s.counselor_id = #{counselorId}
+    </select>
+    
+    <!-- 根据学校ID获取反馈记录 -->
+    <select id="getFeedbackBySchool" resultType="com.empsys.backend.entity.FeedbackRecord">
+        SELECT f.*
+        FROM feedback_record f
+        JOIN student s ON f.student_id = s.student_id
+        WHERE s.school_id = #{schoolId}
+        <if test="year != null">
+            AND YEAR(f.feedback_date) = #{year}
+        </if>
+        ORDER BY f.create_time DESC
+    </select>
+    
+    <!-- 获取单条反馈记录 -->
+    <select id="getFeedbackById" resultType="com.empsys.backend.entity.FeedbackRecord">
+        SELECT * FROM feedback_record
+        WHERE feedback_id = #{feedbackId}
+    </select>
+    
+    <!-- 更新反馈状态 -->
+    <update id="updateFeedbackStatus">
+        UPDATE feedback_record
+        SET status = #{status}, 
+            update_time = NOW()
+        WHERE feedback_id = #{feedbackId}
+    </update>
+    
+    <!-- 获取学生最新的反馈记录 -->
+    <select id="getLatestFeedback" resultType="com.empsys.backend.entity.FeedbackRecord">
+        SELECT * FROM feedback_record
+        WHERE student_id = #{studentId}
+        ORDER BY create_time DESC
+        LIMIT 1
+    </select>
+    
+</mapper> 

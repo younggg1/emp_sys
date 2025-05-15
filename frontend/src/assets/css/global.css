@@ -1,0 +1,49 @@
+﻿* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  padding: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #303133;
+}
+
+.disabled-select {
+  user-select: none;
+}
+
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+} 
