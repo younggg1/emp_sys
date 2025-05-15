@@ -16,12 +16,14 @@
     
     <!-- 获取学生详细信息 -->
     <select id="getStudentInfo" resultMap="StudentMap">
-        SELECT 
-            s.student_id, s.school_id, s.name, s.class_name, s.college, s.major, 
-            s.counselor_id, s.employment_status
-        FROM 
-            student s
-        WHERE 
+        SELECT
+            s.student_id, s.school_id, s.name, s.class_name, s.college, s.major,
+            s.counselor_id, c.name as counselor_name, s.employment_status
+        FROM
+            students s
+                LEFT JOIN
+            counselors c ON s.counselor_id = c.counselor_id
+        WHERE
             s.student_id = #{studentId}
     </select>
     

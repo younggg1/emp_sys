@@ -1,13 +1,29 @@
 ﻿<template>
   <div class="login-form">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-      <el-form-item label="学校" prop="schoolId">
-        <el-select v-model="form.schoolId" placeholder="请选择学校" style="width: 100%">
+      <el-form-item label="学校" prop="schoolId" >
+        <el-select 
+          v-model="form.schoolId" 
+          placeholder="请选择学校" 
+          style="width: 100%"
+          :teleported="false"
+          :popper-class="'custom-select-dropdown'"
+          :popper-options="{
+            modifiers: [
+              {
+                name: 'offset',
+                options: {
+                  offset: [0, 8],
+                },
+              },
+            ],
+          }"
+        >
           <el-option
             v-for="item in schools"
-            :key="item.school_id"
-            :label="item.school_name"
-            :value="item.school_id"
+            :key="item.schoolId"
+            :label="item.schoolName"
+            :value="item.schoolId"
           />
         </el-select>
       </el-form-item>
@@ -16,25 +32,25 @@
         <el-radio-group v-model="form.role">
           <el-radio label="student">学生</el-radio>
           <el-radio label="counselor">辅导员</el-radio>
-          <el-radio label="admin">管理员</el-radio>
+          <el-radio label="admin">学校管理员</el-radio>
         </el-radio-group>
       </el-form-item>
       
       <el-form-item :label="form.role === 'student' ? '学号' : form.role === 'counselor' ? '工号' : '账号'" prop="username">
-        <el-input v-model="form.username" :placeholder="form.role === 'student' ? '请输入学号' : form.role === 'counselor' ? '请输入工号' : '请输入账号'" />
+        <el-input style="margin-right: 10px;  height: 40px;" clearable v-model="form.username" :placeholder="form.role === 'student' ? '请输入学号' : form.role === 'counselor' ? '请输入工号' : '请输入账号'" />
       </el-form-item>
       
       <el-form-item label="密码" prop="password">
-        <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+        <el-input style="margin-right: 10px; height: 40px;" clearable show-password v-model="form.password" type="password" placeholder="请输入密码" />
       </el-form-item>
       
       <el-form-item prop="captcha" v-if="captchaEnabled">
+        <!-- 不要的图标prefix-icon="InfoFilled" -->
         <el-input
           v-model="form.captcha"
           placeholder="请输入验证码"
-          style="margin-right: 10px; width: 50%; height: 50px;"
+          style="margin-right: 10px; width: 50%; height: 40px;"
           clearable
-          prefix-icon="InfoFilled"
         />
         <div style="width: 130px; height: 32px;background-color: aliceblue;" v-if="captchaEnabled">
           <valid-code ref="loginValidCode" @update:value="getCode" />
@@ -50,11 +66,11 @@
 
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted,watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
-import { getSchools, login, getSettings } from '@/api/auth'
+import { getSchools, login, getSettings ,getCaptcha} from '@/api/auth'
 import ValidCode from '@/components/ValidCode.vue'
 import axios from 'axios'
 
@@ -94,12 +110,7 @@ const rules = reactive({
     { required: true, message: '请输入密码', trigger: 'blur' }
   ],
   captcha: [
-    { required: true, message: '请输入验证码', trigger: 'blur' },
-    {
-      validator: (rule, value) => value.toLowerCase() === validCodeValue.value.toLowerCase(),
-      message: '验证码错误',
-      trigger: 'blur',
-    },
+    { required: true, message: '请输入验证码', trigger: 'blur' }
   ]
 })
 
@@ -108,20 +119,15 @@ const getCode = (value) => {
   validCodeValue.value = value;
 };
 
-// 获取学校列表和系统设置
+// 获取学校列表
 const fetchData = async () => {
   try {
     // 获取学校列表
     const schoolsRes = await getSchools()
     if (schoolsRes.code === 200) {
       schools.value = schoolsRes.data
-    }
-    
-    // 获取系统设置
-    const settingsRes = await getSettings()
-    if (settingsRes.code === 200) {
-      settings.value = settingsRes.data
-      captchaEnabled.value = settings.value.require_captcha
+    } else {
+      ElMessage.error(schoolsRes.message || '加载学校列表失败')
     }
   } catch (error) {
     ElMessage.error(error.message || '加载数据失败')
@@ -132,24 +138,34 @@ const fetchData = async () => {
 const handleLogin = async () => {
   if (!formRef.value) return
   
+  // 手动检查验证码
+  if (captchaEnabled.value) {
+    if (!form.captcha) {
+      ElMessage.error('请输入验证码')
+      return
+    }
+    
+    const userInput = form.captcha.toLowerCase()
+    const currentCode = validCodeValue.value.toLowerCase()
+    
+    if (userInput !== currentCode) {
+      ElMessage.error('验证码错误')
+      loginValidCode.value.refreshCode()
+      return
+    }
+  }
+  
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    
-    // 如果开启了验证码，先验证验证码
-    if (captchaEnabled.value) {
-      const userInput = form.captcha.toLowerCase()
-      const currentCode = validCodeValue.value.toLowerCase()
-      
-      if (userInput !== currentCode) {
-        ElMessage.error('验证码错误')
-        loginValidCode.value.refreshCode()
-        return
-      }
-    }
     
     loading.value = true
     
     try {
+      console.log('发送登录请求:', {
+    schoolId: form.schoolId,
+    username: form.username,
+    password: form.password
+  })
       const res = await login(form.schoolId, form.username, form.password)
       
       if (res.code === 200) {
@@ -163,6 +179,7 @@ const handleLogin = async () => {
       }
     } catch (error) {
       ElMessage.error(error.message || '登录失败')
+      console.error('登录错误详情:', error)
       if (captchaEnabled.value) {
         loginValidCode.value.refreshCode()
       }
@@ -172,17 +189,20 @@ const handleLogin = async () => {
   })
 }
 
-// 组件挂载时检查验证码设置
 onMounted(async () => {
   fetchData()
-  
-  // 单独检查验证码设置（如果需要）
-  try {
-    const res = await axios.get('/settings')
-    captchaEnabled.value = res.data
-    console.log('验证码是否启用:', captchaEnabled.value)
-  } catch (error) {
-    console.error('获取验证码设置失败', error)
+
+})
+watch(() => form.schoolId, async (newSchoolId) => {
+  if (newSchoolId) {
+    try {
+      const captchaRes = await getCaptcha(newSchoolId)
+      if (captchaRes.code === 200) {
+        captchaEnabled.value = captchaRes.data
+      }
+    } catch (error) {
+      ElMessage.error(error.message || '加载验证码设置失败')
+    }
   }
 })
 </script>
@@ -192,5 +212,20 @@ onMounted(async () => {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
+}
+
+/* 添加下拉菜单的样式 */
+:deep(.custom-select-dropdown .el-select-dropdown__wrap) {
+  max-height: 120px !important; /* 强制设置较小的高度以确保出现滚动条 */
+}
+
+:deep(.custom-select-dropdown .el-select-dropdown__list) {
+  padding: 0;
+}
+
+:deep(.custom-select-dropdown .el-select-dropdown__item) {
+  padding: 8px 16px;
+  height: 40px; /* 固定每个选项的高度 */
+  line-height: 24px;
 }
 </style> 

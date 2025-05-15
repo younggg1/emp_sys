@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
     
     @Override
     public Response<List<School>> getSchools() {
-        List<School> schools = schoolMapper.selectList(null);
+        List<School> schools = schoolMapper.getAllSchools();
         return Response.success(schools);
     }
     

@@ -19,7 +19,8 @@
         SELECT require_approval FROM system_settings
         WHERE school_id = #{schoolId}
     </select>
-    
+
+
     <!-- 更新系统设置 -->
     <update id="updateSettings">
         UPDATE system_settings
@@ -27,7 +28,17 @@
             require_approval = #{requireApproval}
         WHERE school_id = #{schoolId}
     </update>
-    
+
+<!--    获取验证码设置-->
+    <select id="getValueBySchoolId" resultType="java.lang.String">
+        SELECT require_captcha FROM system_settings WHERE school_id = #{schoolId}
+    </select>
+    <!--    更新验证码设置-->
+
+    <update id="updateValue">
+        UPDATE system_settings SET require_captcha = #{requireCaptcha}
+    </update>
+
     <!-- 插入系统设置 -->
     <insert id="insertSettings">
         INSERT INTO system_settings (setting_id, school_id, require_captcha, require_approval)

@@ -22,11 +22,11 @@ public interface AuthService {
      * @return 学校列表
      */
     Response<List<School>> getSchools();
-    
+
     /**
      * 获取系统设置
      * @param schoolId 学校ID
      * @return 系统设置
      */
     Response<SystemSettings> getSettings(Long schoolId);
-} 
+}

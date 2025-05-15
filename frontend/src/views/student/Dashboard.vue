@@ -28,12 +28,12 @@
         </template>
         <div v-loading="loading">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="学号">{{ studentInfo.student_id }}</el-descriptions-item>
+            <el-descriptions-item label="学号">{{ studentInfo.studentId }}</el-descriptions-item>
             <el-descriptions-item label="姓名">{{ studentInfo.name }}</el-descriptions-item>
-            <el-descriptions-item label="班级">{{ studentInfo.class_name }}</el-descriptions-item>
+            <el-descriptions-item label="班级">{{ studentInfo.className }}</el-descriptions-item>
             <el-descriptions-item label="学院">{{ studentInfo.college }}</el-descriptions-item>
             <el-descriptions-item label="专业">{{ studentInfo.major }}</el-descriptions-item>
-            <el-descriptions-item label="辅导员">{{ studentInfo.counselor_name }}</el-descriptions-item>
+            <el-descriptions-item label="辅导员">{{ studentInfo.counselorName }}</el-descriptions-item>
             <el-descriptions-item label="就业状态">
               <el-tag :type="studentInfo.employment_status === 'employed' ? 'success' : 'info'">
                 {{ studentInfo.employment_status === 'employed' ? '已就业' : '未就业' }}
@@ -52,15 +52,17 @@ import { ElMessage } from 'element-plus'
 import { House, Document, ChatDotRound } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { getStudentInfo } from '@/api/student'
+import { useUserStore } from '@/store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const studentInfo = ref({
-  student_id: '',
+  studentId: '',
   name: '',
-  class_name: '',
+  className: '',
   college: '',
   major: '',
-  counselor_name: '',
+  counselorName: '',
   employment_status: 'unemployed'
 })
 
@@ -68,11 +70,21 @@ const studentInfo = ref({
 const fetchStudentInfo = async () => {
   loading.value = true
   try {
-    const res = await getStudentInfo()
+    // 从 store 中获取用户 ID
+    const userId = userStore.userId
+    if (!userId) {
+      ElMessage.error('用户未登录或用户ID不存在')
+      return
+    }
+    
+    console.log('正在获取学生信息，用户ID:', userId)
+    const res = await getStudentInfo(userId)
     if (res.code === 200) {
       studentInfo.value = res.data
+      console.log('获取到学生信息:', res.data)
     }
   } catch (error) {
+    console.error('获取学生信息错误:', error)
     ElMessage.error(error.message || '获取个人信息失败')
   } finally {
     loading.value = false

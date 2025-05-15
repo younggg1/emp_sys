@@ -31,7 +31,8 @@ public class StudentServiceImpl implements StudentService {
     
     @Override
     public Response<Student> getStudentInfo(Long studentId) {
-        Student student = studentMapper.selectById(studentId);
+        // 使用自定义方法获取学生详细信息，包括辅导员姓名
+        Student student = studentMapper.getStudentInfo(studentId);
         if (student == null) {
             return Response.error("学生信息不存在");
         }

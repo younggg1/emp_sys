@@ -3,7 +3,7 @@
 export const login = async (schoolId, username, password) => {
   try {
     const response = await axios.post('/login', {
-      school_id: schoolId,
+      schoolId,
       username,
       password
     })
@@ -21,7 +21,16 @@ export const getSettings = async () => {
     throw error.response?.data || { message: '获取设置失败' }
   }
 }
-
+export const getCaptcha = async (schoolId) => {
+  try {
+    // 拼接 URL 参数
+    const response = await axios.get(`/captcha?schoolId=${schoolId}`)
+    return response.data
+  } catch (error) {
+    console.error('获取验证码设置失败:', error)
+    throw error.response?.data || { message: '获取验证码设置失败' }
+  }
+}
 export const getSchools = async () => {
   try {
     const response = await axios.get('/schools')

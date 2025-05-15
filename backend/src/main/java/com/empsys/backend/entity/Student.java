@@ -20,8 +20,9 @@ public class Student {
     private String college;
     
     private String major;
-    
+
     private Long counselorId;
+    private String counselorName;
     
     private String employmentStatus; // 'unemployed', 'employed'
     
