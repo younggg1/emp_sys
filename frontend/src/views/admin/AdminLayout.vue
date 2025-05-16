@@ -33,14 +33,6 @@
             <div class="menu-header">
               <span>管理员端</span>
             </div>
-            <el-menu-item index="/admin/employment">
-              <el-icon><document /></el-icon>
-              <span>就业信息管理</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/feedback">
-              <el-icon><chat-dot-round /></el-icon>
-              <span>就业反馈管理</span>
-            </el-menu-item>
             <el-menu-item index="/admin/statistics">
               <el-icon><pie-chart /></el-icon>
               <span>就业数据统计</span>

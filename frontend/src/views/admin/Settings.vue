@@ -16,37 +16,13 @@
             v-model="settingsForm.requireCaptcha"
             active-text="启用"
             inactive-text="关闭"
-            @change="handleSettingChange('requireCaptcha')"
+            @change="handleCaptchaChange"
           ></el-switch>
           <div class="form-item-desc">开启后，登录页面将显示验证码，用户需要输入正确的验证码才能登录</div>
-        </el-form-item>
-
-        <el-form-item label="辅导员审核">
-          <el-switch
-            v-model="settingsForm.requireApproval"
-            active-text="启用"
-            inactive-text="关闭"
-            @change="handleSettingChange('requireApproval')"
-          ></el-switch>
-          <div class="form-item-desc">开启后，学生提交的就业信息和反馈需要辅导员审核后才能生效</div>
         </el-form-item>
       </el-form>
 
       <el-divider></el-divider>
-
-      <div class="settings-history">
-        <h3>设置记录</h3>
-        <el-timeline>
-          <el-timeline-item
-            v-for="(item, index) in settingsHistory"
-            :key="index"
-            :timestamp="item.time"
-            :color="item.type === 'requireCaptcha' ? '#409EFF' : '#67C23A'"
-          >
-            {{ item.content }}
-          </el-timeline-item>
-        </el-timeline>
-      </div>
     </el-card>
   </div>
 </template>
@@ -54,75 +30,61 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getSystemSettings, updateCaptchaSetting } from '@/api/settings'
 
 // 设置表单数据
 const settingsForm = reactive({
-  requireCaptcha: false,
-  requireApproval: true
+  requireCaptcha: false
 })
 
-// 设置修改历史
-const settingsHistory = ref([])
 const loading = ref(false)
 
-// 模拟数据加载
+// 页面加载时获取系统设置
 onMounted(() => {
   fetchSettings()
-  fetchSettingsHistory()
 })
 
 // 获取系统设置
-const fetchSettings = () => {
+const fetchSettings = async () => {
   loading.value = true
-  // 这里应该是从API获取数据
-  setTimeout(() => {
-    settingsForm.requireCaptcha = true
-    settingsForm.requireApproval = true
-    loading.value = false
-  }, 500)
-}
-
-// 获取设置变更历史
-const fetchSettingsHistory = () => {
-  // 这里应该是从API获取数据
-  settingsHistory.value = [
-    {
-      type: 'requireCaptcha',
-      content: '管理员(admin)启用了登录验证码',
-      time: '2023-06-01 10:00:00'
-    },
-    {
-      type: 'requireApproval',
-      content: '管理员(admin)启用了辅导员审核',
-      time: '2023-06-01 09:30:00'
-    },
-    {
-      type: 'requireCaptcha',
-      content: '管理员(admin)关闭了登录验证码',
-      time: '2023-05-30 14:20:00'
-    }
-  ]
-}
-
-// 处理设置变更
-const handleSettingChange = (type) => {
-  loading.value = true
-  // 这里应该是调用API更新设置
-  
-  const settingText = type === 'requireCaptcha' ? '登录验证码' : '辅导员审核'
-  const actionText = settingsForm[type] ? '启用' : '关闭'
-  
-  setTimeout(() => {
-    // 更新设置历史
-    settingsHistory.value.unshift({
-      type,
-      content: `管理员(admin)${actionText}了${settingText}`,
-      time: new Date().toLocaleString()
-    })
+  try {
+    const res = await getSystemSettings()
     
-    ElMessage.success(`已${actionText}${settingText}`)
+    if (res.code === 200 && res.data) {
+      settingsForm.requireCaptcha = res.data.requireCaptcha
+    } else {
+      ElMessage.error(res.message || '获取系统设置失败')
+    }
+  } catch (error) {
+    console.error('获取系统设置错误:', error)
+    ElMessage.error('获取系统设置失败，请稍后再试')
+  } finally {
     loading.value = false
-  }, 500)
+  }
+}
+
+// 处理验证码设置变更
+const handleCaptchaChange = async () => {
+  loading.value = true
+  try {
+    const res = await updateCaptchaSetting(settingsForm.requireCaptcha)
+    
+    if (res.code === 200) {
+      const actionText = settingsForm.requireCaptcha ? '启用' : '关闭'
+      ElMessage.success(`已${actionText}登录验证码`)
+    } else {
+      // 如果更新失败，还原开关状态
+      settingsForm.requireCaptcha = !settingsForm.requireCaptcha
+      ElMessage.error(res.message || '更新验证码设置失败')
+    }
+  } catch (error) {
+    console.error('更新验证码设置错误:', error)
+    // 如果发生错误，还原开关状态
+    settingsForm.requireCaptcha = !settingsForm.requireCaptcha
+    ElMessage.error('更新验证码设置失败，请稍后再试')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -153,14 +115,5 @@ const handleSettingChange = (type) => {
   color: #909399;
   line-height: 1.5;
   margin-top: 5px;
-}
-
-.settings-history {
-  margin-top: 30px;
-}
-
-.settings-history h3 {
-  margin: 0 0 20px 0;
-  font-size: 16px;
 }
 </style>

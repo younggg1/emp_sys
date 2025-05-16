@@ -42,7 +42,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { setUser } from '@/utils/user'
-import { login, mockLogin } from '@/api/auth'
+import { login } from '@/api/auth'
+import { getSystemSettings } from '@/api/settings'
 import ValidCode from '@/components/ValidCode.vue'
 
 const router = useRouter()
@@ -50,7 +51,7 @@ const router = useRouter()
 const formRef = ref(null)
 const loginValidCode = ref(null) // 验证码组件的 ref
 const validCodeValue = ref('') // 存储验证码的实际值
-const captchaEnabled = ref(true) // 验证码开关，默认启用
+const captchaEnabled = ref(false) // 验证码开关，默认禁用，等待从系统设置获取
 const loading = ref(false)
 
 const form = reactive({
@@ -79,6 +80,35 @@ const rules = reactive({
 const getCode = (value) => {
   validCodeValue.value = value;
 };
+
+// 获取系统设置
+const fetchSystemSettings = async () => {
+  try {
+    const res = await getSystemSettings()
+    
+    if (res.code === 200 && res.data) {
+      captchaEnabled.value = res.data.requireCaptcha
+      
+      // 如果启用验证码，下一个渲染周期后刷新验证码
+      if (captchaEnabled.value) {
+        setTimeout(() => {
+          if (loginValidCode.value) {
+            loginValidCode.value.refreshCode()
+          }
+        }, 0)
+      }
+    }
+  } catch (error) {
+    console.error('获取系统设置错误:', error)
+    // 出错时默认启用验证码（安全优先）
+    captchaEnabled.value = true
+    setTimeout(() => {
+      if (loginValidCode.value) {
+        loginValidCode.value.refreshCode()
+      }
+    }, 0)
+  }
+}
 
 // 处理登录
 const handleLogin = async () => {
@@ -138,10 +168,8 @@ const handleLogin = async () => {
 }
 
 onMounted(() => {
-  // 页面加载时刷新验证码
-  if (captchaEnabled.value && loginValidCode.value) {
-    loginValidCode.value.refreshCode()
-  }
+  // 获取系统设置
+  fetchSystemSettings()
 })
 </script>
 

@@ -64,17 +64,7 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: '/admin/employment'
-        },
-        {
-          path: 'employment',
-          name: 'adminEmployment',
-          component: () => import('../views/admin/Employment.vue')
-        },
-        {
-          path: 'feedback',
-          name: 'adminFeedback',
-          component: () => import('../views/admin/Feedback.vue')
+          redirect: '/admin/statistics'
         },
         {
           path: 'statistics',
