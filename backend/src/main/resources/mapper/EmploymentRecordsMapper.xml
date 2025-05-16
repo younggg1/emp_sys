@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.EmploymentRecordsMapper">
+
+    <resultMap id="BaseResultMap" type="com.empsys.backend.entity.EmploymentRecords">
+            <id property="record_id" column="record_id" jdbcType="BIGINT"/>
+            <result property="student_id" column="student_id" jdbcType="BIGINT"/>
+            <result property="company_nature" column="company_nature" jdbcType="VARCHAR"/>
+            <result property="company" column="company" jdbcType="VARCHAR"/>
+            <result property="position" column="position" jdbcType="VARCHAR"/>
+            <result property="salary" column="salary" jdbcType="DECIMAL"/>
+            <result property="entry_date" column="entry_date" jdbcType="DATE"/>
+            <result property="region" column="region" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="VARCHAR"/>
+            <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        record_id,student_id,company_nature,
+        company,position,salary,
+        entry_date,region,status,
+        created_at,updated_at
+    </sql>
+    
+    <!-- 获取学生的就业信息列表 -->
+    <select id="selectEmploymentRecordsByStudentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM employment_records
+        WHERE student_id = #{studentId}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 分页获取学生的就业信息列表 -->
+    <select id="selectEmploymentRecordsPageByStudentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM employment_records
+        WHERE student_id = #{studentId}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 根据ID获取就业信息 -->
+    <select id="selectEmploymentRecordById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM employment_records
+        WHERE record_id = #{recordId}
+        LIMIT 1
+    </select>
+    
+    <!-- 验证就业信息是否属于指定学生 -->
+    <select id="countEmploymentRecordByIdAndStudentId" resultType="int">
+        SELECT COUNT(1)
+        FROM employment_records
+        WHERE record_id = #{recordId} AND student_id = #{studentId}
+    </select>
+    
+    <!-- 添加就业信息 -->
+    <insert id="insertEmploymentRecord" parameterType="com.empsys.backend.entity.EmploymentRecords" useGeneratedKeys="true" keyProperty="record_id">
+        INSERT INTO employment_records
+        (student_id, company_nature, company, position, salary, entry_date, region, status, created_at, updated_at)
+        VALUES
+        (#{student_id}, #{company_nature}, #{company}, #{position}, #{salary}, #{entry_date}, #{region}, #{status}, #{created_at}, #{updated_at})
+    </insert>
+    
+    <!-- 更新就业信息 -->
+    <update id="updateEmploymentRecord" parameterType="com.empsys.backend.entity.EmploymentRecords">
+        UPDATE employment_records
+        SET 
+            company_nature = #{company_nature},
+            company = #{company},
+            position = #{position},
+            salary = #{salary},
+            entry_date = #{entry_date},
+            region = #{region},
+            status = #{status},
+            updated_at = #{updated_at}
+        WHERE record_id = #{record_id}
+    </update>
+    
+    <!-- 删除就业信息 -->
+    <delete id="deleteEmploymentRecord">
+        DELETE FROM employment_records
+        WHERE record_id = #{recordId}
+    </delete>
+</mapper>

@@ -1,6 +1,9 @@
 ﻿import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/store'
+import { checkLoggedIn, getUserRole } from '@/utils/user'
 import LoginView from '../views/LoginView.vue'
+import StudentLayout from '../views/student/StudentLayout.vue'
+import CounselorLayout from '../views/counselor/CounselorLayout.vue'
+import AdminLayout from '../views/admin/AdminLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,8 +15,7 @@ const router = createRouter({
     },
     {
       path: '/student',
-      name: 'studentDashboard',
-      component: () => import('../views/student/Dashboard.vue'),
+      component: StudentLayout,
       meta: { requiresAuth: true, role: 'student' },
       children: [
         {
@@ -35,8 +37,7 @@ const router = createRouter({
     },
     {
       path: '/counselor',
-      name: 'counselorDashboard',
-      component: () => import('../views/counselor/Dashboard.vue'),
+      component: CounselorLayout,
       meta: { requiresAuth: true, role: 'counselor' },
       children: [
         {
@@ -63,14 +64,12 @@ const router = createRouter({
     },
     {
       path: '/admin',
-      name: 'adminDashboard',
-      component: () => import('../views/admin/Dashboard.vue'),
+      component: AdminLayout,
       meta: { requiresAuth: true, role: 'admin' },
       children: [
         {
           path: '',
-          name: 'adminHome',
-          component: () => import('../views/admin/Dashboard.vue')
+          redirect: '/admin/employment'
         },
         {
           path: 'employment',
@@ -88,14 +87,14 @@ const router = createRouter({
           component: () => import('../views/admin/Statistics.vue')
         },
         {
+          path: 'history',
+          name: 'adminHistory',
+          component: () => import('../views/admin/History.vue')
+        },
+        {
           path: 'user-manage',
           name: 'adminUserManage',
           component: () => import('../views/admin/UserManage.vue')
-        },
-        {
-          path: 'permission',
-          name: 'adminPermission',
-          component: () => import('../views/admin/Permission.vue')
         },
         {
           path: 'settings',
@@ -109,19 +108,18 @@ const router = createRouter({
 
 // 全局前置守卫，验证用户身份和权限
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore()
-  
   // 检查路由是否需要身份验证
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // 检查是否已登录
-    if (!userStore.isLoggedIn && !userStore.checkLoggedIn()) {
+    if (!checkLoggedIn()) {
       // 未登录，重定向到登录页
       next({ name: 'login' })
     } else {
       // 已登录，检查角色权限
-      if (to.meta.role && to.meta.role !== userStore.role) {
+      const userRole = getUserRole()
+      if (to.meta.role && to.meta.role !== userRole) {
         // 角色不匹配，重定向到对应角色的首页
-        next({ path: `/${userStore.role}` })
+        next({ path: `/${userRole}` })
       } else {
         // 权限验证通过
         next()

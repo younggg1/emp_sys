@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.StudentsMapper">
+
+    <resultMap id="BaseResultMap" type="com.empsys.backend.entity.Students">
+            <id property="student_id" column="student_id" jdbcType="BIGINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="grade" column="grade" jdbcType="VARCHAR"/>
+            <result property="class_name" column="class_name" jdbcType="VARCHAR"/>
+            <result property="college" column="college" jdbcType="VARCHAR"/>
+            <result property="major" column="major" jdbcType="VARCHAR"/>
+            <result property="counselor_id" column="counselor_id" jdbcType="BIGINT"/>
+            <result property="employment_status" column="employment_status" jdbcType="VARCHAR"/>
+            <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
+            <result property="counselorName" column="counselor_name" jdbcType="VARCHAR"/>
+            <result property="studentId" column="username" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        student_id,name,grade,
+        class_name,college,major,
+        counselor_id,employment_status,created_at,
+        updated_at
+    </sql>
+    
+    <!-- 根据用户ID查询学生信息，包括辅导员姓名 -->
+    <select id="selectStudentInfoByUserId" resultMap="BaseResultMap">
+        SELECT 
+            s.*,
+            u.username,
+            c.name AS counselor_name
+        FROM 
+            students s
+        JOIN
+            users u ON s.student_id = u.user_id
+        LEFT JOIN
+            counselors c ON s.counselor_id = c.counselor_id
+        WHERE 
+            s.student_id = #{userId}
+        LIMIT 1
+    </select>
+</mapper>

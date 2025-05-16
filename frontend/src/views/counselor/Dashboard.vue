@@ -1,97 +1,71 @@
 ﻿<template>
-  <Layout>
-    <template #menu>
-      <el-menu-item index="/counselor">
-        <el-icon><user /></el-icon>
-        <span>班级学生</span>
-      </el-menu-item>
-      <el-menu-item index="/counselor/employment">
-        <el-icon><document /></el-icon>
-        <span>就业信息管理</span>
-      </el-menu-item>
-      <el-menu-item index="/counselor/feedback">
-        <el-icon><chat-dot-round /></el-icon>
-        <span>就业反馈管理</span>
-      </el-menu-item>
-      <el-menu-item index="/counselor/statistics">
-        <el-icon><pie-chart /></el-icon>
-        <span>统计分析</span>
-      </el-menu-item>
-    </template>
-
-    <template #header-title>
-      辅导员端 - 班级学生
-    </template>
-    
-    <div class="dashboard">
-      <el-card class="student-card">
-        <template #header>
-          <div class="card-header">
-            <span>班级学生信息</span>
-            <el-input
-              v-model="searchText"
-              placeholder="搜索学生姓名/学号/专业"
-              style="width: 300px"
-              clearable
-              @input="handleSearch"
-            >
-              <template #prefix>
-                <el-icon><search /></el-icon>
-              </template>
-            </el-input>
-          </div>
-        </template>
-        
-        <DataTable
-          :data="filteredStudents"
-          :columns="columns"
-          :loading="loading"
-          :show-actions="false"
-        >
-          <template #employment_status="{ row }">
-            <el-tag :type="row.employment_status === 'employed' ? 'success' : 'info'">
-              {{ row.employment_status === 'employed' ? '已就业' : '未就业' }}
-            </el-tag>
-          </template>
-        </DataTable>
-      </el-card>
-      
-      <el-card class="stats-card">
-        <template #header>
-          <div class="card-header">
-            <span>就业统计</span>
-          </div>
-        </template>
-        <div class="stats-container">
-          <div class="stat-item">
-            <div class="stat-title">学生总数</div>
-            <div class="stat-value">{{ stats.total }}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-title">已就业</div>
-            <div class="stat-value">{{ stats.employed }}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-title">待就业</div>
-            <div class="stat-value">{{ stats.unemployed }}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-title">就业率</div>
-            <div class="stat-value">{{ stats.percentage }}%</div>
-          </div>
+  <div class="dashboard">
+    <el-card class="student-card" shadow="hover">
+      <template #header>
+        <div class="card-header">
+          <span><el-icon class="header-icon"><user-filled /></el-icon> 班级学生信息</span>
+          <el-input
+            v-model="searchText"
+            placeholder="搜索学生姓名/学号/专业"
+            style="width: 300px"
+            clearable
+            @input="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><search /></el-icon>
+            </template>
+          </el-input>
         </div>
-      </el-card>
-    </div>
-  </Layout>
+      </template>
+      
+      <DataTable
+        :data="filteredStudents"
+        :columns="columns"
+        :loading="loading"
+        :show-actions="false"
+      >
+        <template #employment_status="{ row }">
+          <el-tag :type="row.employment_status === 'employed' ? 'success' : 'info'">
+            {{ row.employment_status === 'employed' ? '已就业' : '未就业' }}
+          </el-tag>
+        </template>
+      </DataTable>
+    </el-card>
+    
+    <el-card class="stats-card" shadow="hover">
+      <template #header>
+        <div class="card-header">
+          <span><el-icon class="header-icon"><data-analysis /></el-icon> 就业统计</span>
+        </div>
+      </template>
+      <div class="stats-container">
+        <div class="stat-item">
+          <div class="stat-title">学生总数</div>
+          <div class="stat-value">{{ stats.total }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-title">已就业</div>
+          <div class="stat-value">{{ stats.employed }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-title">待就业</div>
+          <div class="stat-value">{{ stats.unemployed }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-title">就业率</div>
+          <div class="stat-value">{{ stats.percentage }}%</div>
+        </div>
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, Document, ChatDotRound, PieChart, Search } from '@element-plus/icons-vue'
-import Layout from '@/components/Layout.vue'
+import { UserFilled, Search, DataAnalysis } from '@element-plus/icons-vue'
 import DataTable from '@/components/DataTable.vue'
-import { getStudents } from '@/api/counselor'
+import { getStudents, mockGetStudents } from '@/api/counselor'
 
 // 表格列定义
 const columns = [
@@ -141,7 +115,8 @@ const stats = computed(() => {
 const fetchStudents = async () => {
   loading.value = true
   try {
-    const res = await getStudents()
+    // 使用模拟数据
+    const res = mockGetStudents()
     if (res.code === 200) {
       students.value = res.data
     }
@@ -170,16 +145,42 @@ onMounted(() => {
 
 .student-card {
   margin-bottom: 20px;
+  border-radius: 4px;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-weight: bold;
+  color: #303133;
+}
+
+.header-icon {
+  margin-right: 6px;
+  color: #409EFF;
+}
+
+:deep(.el-card__header) {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+  background-color: #f8f9fc;
+}
+
+:deep(.el-table th) {
+  background-color: #f5f7fa !important;
+  color: #606266;
+  font-weight: bold;
+}
+
+:deep(.el-table--border) {
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .stats-card {
   margin-bottom: 20px;
+  border-radius: 4px;
 }
 
 .stats-container {

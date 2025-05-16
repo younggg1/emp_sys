@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.FeedbackRecordsMapper">
+
+    <resultMap id="BaseResultMap" type="com.empsys.backend.entity.FeedbackRecords">
+            <id property="feedback_id" column="feedback_id" jdbcType="BIGINT"/>
+            <result property="student_id" column="student_id" jdbcType="BIGINT"/>
+            <result property="stage" column="stage" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="VARCHAR"/>
+            <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        feedback_id,student_id,stage,
+        content,status,created_at,
+        updated_at
+    </sql>
+    
+    <!-- 获取学生的反馈列表 -->
+    <select id="selectFeedbackRecordsByStudentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM feedback_records
+        WHERE student_id = #{studentId}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 分页获取学生的反馈列表 -->
+    <select id="selectFeedbackRecordsPageByStudentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM feedback_records
+        WHERE student_id = #{studentId}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 根据ID获取反馈 -->
+    <select id="selectFeedbackRecordById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM feedback_records
+        WHERE feedback_id = #{feedbackId}
+        LIMIT 1
+    </select>
+    
+    <!-- 验证反馈是否属于指定学生 -->
+    <select id="countFeedbackRecordByIdAndStudentId" resultType="int">
+        SELECT COUNT(1)
+        FROM feedback_records
+        WHERE feedback_id = #{feedbackId} AND student_id = #{studentId}
+    </select>
+    
+    <!-- 添加反馈 -->
+    <insert id="insertFeedbackRecord" parameterType="com.empsys.backend.entity.FeedbackRecords" useGeneratedKeys="true" keyProperty="feedback_id">
+        INSERT INTO feedback_records
+        (student_id, stage, content, status, created_at, updated_at)
+        VALUES
+        (#{student_id}, #{stage}, #{content}, #{status}, #{created_at}, #{updated_at})
+    </insert>
+    
+    <!-- 更新反馈 -->
+    <update id="updateFeedbackRecord" parameterType="com.empsys.backend.entity.FeedbackRecords">
+        UPDATE feedback_records
+        SET 
+            stage = #{stage},
+            content = #{content},
+            status = #{status},
+            updated_at = #{updated_at}
+        WHERE feedback_id = #{feedback_id}
+    </update>
+    
+    <!-- 删除反馈 -->
+    <delete id="deleteFeedbackRecord">
+        DELETE FROM feedback_records
+        WHERE feedback_id = #{feedbackId}
+    </delete>
+</mapper>

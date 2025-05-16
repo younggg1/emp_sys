@@ -1,41 +1,39 @@
-﻿import axios from 'axios'
+import axios from 'axios'
+import request from '@/utils/request'
 
-export const login = async (schoolId, username, password) => {
+/**
+ * 登录API - 调用后端接口
+ * @param username 用户名
+ * @param password 密码
+ * @param role 角色
+ * @returns {Promise<*>}
+ */
+export const login = async (username, password, role) => {
   try {
-    const response = await axios.post('/login', {
-      schoolId,
-      username,
-      password
+    const response = await request({
+      url: '/api/login',
+      method: 'post',
+      data: {
+        username,
+        password,
+        role
+      }
     })
-    return response.data
+    return response
   } catch (error) {
-    throw error.response?.data || { message: '登录失败，请稍后再试' }
+    throw error.message || '登录失败，请稍后再试'
   }
 }
 
-export const getSettings = async () => {
-  try {
-    const response = await axios.get('/settings')
-    return response.data
-  } catch (error) {
-    throw error.response?.data || { message: '获取设置失败' }
-  }
-}
-export const getCaptcha = async (schoolId) => {
-  try {
-    // 拼接 URL 参数
-    const response = await axios.get(`/captcha?schoolId=${schoolId}`)
-    return response.data
-  } catch (error) {
-    console.error('获取验证码设置失败:', error)
-    throw error.response?.data || { message: '获取验证码设置失败' }
-  }
-}
-export const getSchools = async () => {
-  try {
-    const response = await axios.get('/schools')
-    return response.data
-  } catch (error) {
-    throw error.response?.data || { message: '获取学校列表失败' }
+// 模拟登录功能，在后端接口未完成时使用
+export const mockLogin = (username, password, role) => {
+  // 模拟成功响应
+  return {
+    code: 200,
+    data: {
+      user_id: '1001',
+      role: role,
+      username: username
+    }
   }
 } 
