@@ -328,10 +328,10 @@ const handleEdit = (row) => {
 
 // 处理删除
 const handleDelete = (row) => {
-  if (row.status === 'approved') {
-    ElMessage.warning('已审核的反馈不能删除')
-    return
-  }
+  // if (row.status === 'approved') {
+  //   ElMessage.warning('已审核的反馈不能删除')
+  //   return
+  // }
   
   ElMessageBox.confirm('确定删除该反馈吗？此操作不可恢复', '提示', {
     confirmButtonText: '确定',

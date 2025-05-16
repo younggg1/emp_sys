@@ -7,7 +7,7 @@
           <div class="search-box">
             <el-input
               v-model="searchText"
-              placeholder="搜索学生/公司"
+              placeholder="搜索学生/班级"
               style="width: 250px; margin-right: 10px;"
               clearable
               @input="handleSearch"
@@ -29,112 +29,86 @@
         :data="filteredFeedback"
         :columns="columns"
         :loading="loading"
-        @delete="handleDelete"
+        :showActions="false"
       >
+        <template #student="{ row }">
+          <div>
+            <div>{{ row.student_name }}</div>
+            <div class="text-secondary">{{ row.student_number }}</div>
+          </div>
+        </template>
+        <template #created_at="{ row }">
+          {{ formatDate(row.created_at) }}
+        </template>
+        <template #class_info="{ row }">
+          <div>
+            <div>{{ row.class_name }}</div>
+            <div class="text-secondary">{{ row.major }}</div>
+          </div>
+        </template>
+        
         <template #status="{ row }">
           <el-tag :type="row.status === 'approved' ? 'success' : 'warning'">
             {{ row.status === 'approved' ? '已审核' : '待审核' }}
           </el-tag>
         </template>
-        <template #ratings="{ row }">
-          <div class="ratings">
-            <div>企业：{{ row.company_rating }}星</div>
-            <div>薪资：{{ row.salary_rating }}星</div>
-            <div>工作：{{ row.job_rating }}星</div>
-          </div>
-        </template>
-        <template #major_match="{ row }">
-          {{ getMajorMatchText(row.major_match) }}
-        </template>
         <template #actions="{ row }">
           <el-button 
+            v-if="row.status === 'pending'" 
             size="small" 
-            type="primary" 
-            @click="viewDetail(row)"
+            type="success" 
+            @click="handleApprove(row)"
           >
-            <el-icon><view /></el-icon> 查看
+            <el-icon><check /></el-icon> 审核
           </el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">
+          <el-button 
+            size="small" 
+            type="danger" 
+            @click="handleDelete(row)"
+          >
             <el-icon><delete /></el-icon> 删除
           </el-button>
         </template>
       </DataTable>
     </el-card>
-    
-    <!-- 查看反馈详情对话框 -->
-    <el-dialog
-      title="反馈详情"
-      v-model="dialogVisible"
-      width="50%"
-    >
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="学生学号">{{ currentFeedback.student_id }}</el-descriptions-item>
-        <el-descriptions-item label="学生姓名">{{ currentFeedback.student_name }}</el-descriptions-item>
-        <el-descriptions-item label="提交日期">{{ currentFeedback.submit_date }}</el-descriptions-item>
-        <el-descriptions-item label="状态">
-          <el-tag :type="currentFeedback.status === 'approved' ? 'success' : 'warning'">
-            {{ currentFeedback.status === 'approved' ? '已审核' : '待审核' }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="就业企业" :span="2">{{ currentFeedback.company }}</el-descriptions-item>
-        <el-descriptions-item label="企业评价">
-          <el-rate v-model="currentFeedback.company_rating" disabled show-score />
-        </el-descriptions-item>
-        <el-descriptions-item label="薪资满意度">
-          <el-rate v-model="currentFeedback.salary_rating" disabled show-score />
-        </el-descriptions-item>
-        <el-descriptions-item label="工作内容满意度">
-          <el-rate v-model="currentFeedback.job_rating" disabled show-score />
-        </el-descriptions-item>
-        <el-descriptions-item label="专业对口程度">
-          {{ getMajorMatchText(currentFeedback.major_match) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="反馈内容" :span="2">
-          <pre class="feedback-content">{{ currentFeedback.content }}</pre>
-        </el-descriptions-item>
-      </el-descriptions>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ChatSquare, Search, View, Delete } from '@element-plus/icons-vue'
+import { ChatSquare, Search, Delete, Check } from '@element-plus/icons-vue'
 import DataTable from '@/components/DataTable.vue'
-import { getFeedbackRecords, deleteFeedback, mockGetFeedbackRecords } from '@/api/counselor'
+import { getFeedbackRecords, deleteFeedback, approveFeedback } from '@/api/counselor'
+import { getUserId } from '@/utils/user'
 
 // 表格列定义
 const columns = [
-  { prop: 'student_id', label: '学号', width: '120' },
-  { prop: 'student_name', label: '姓名', width: '100' },
-  { prop: 'submit_date', label: '提交日期', width: '120' },
-  { prop: 'company', label: '就业企业' },
-  { prop: 'ratings', label: '评分', slot: 'ratings' },
-  { prop: 'major_match', label: '专业对口', slot: 'major_match' },
-  { prop: 'status', label: '状态', slot: 'status' }
+  { prop: 'student', label: '学生', width: '150', slot: 'student' },
+  { prop: 'class_info', label: '班级/专业', width: '180', slot: 'class_info' },
+  { prop: 'created_at', label: '提交日期', width: '180', slot: 'created_at' },
+  { prop: 'stage', label: '就业阶段', width: '120' },
+  { prop: 'content', label: '反馈内容', minWidth: '300' },
+  { prop: 'status', label: '状态', width: '100', slot: 'status' },
+  { prop: 'actions', label: '操作', width: '220', slot: 'actions' }
 ]
 
 const loading = ref(false)
 const feedbackList = ref([])
-const dialogVisible = ref(false)
 const searchText = ref('')
 const filterStatus = ref('')
-const currentFeedback = ref({})
 
-// 专业对口程度映射
-const getMajorMatchText = (value) => {
-  const map = { 
-    perfect: '完全对口', 
-    good: '基本对口', 
-    partial: '部分对口', 
-    none: '不对口' 
-  }
-  return map[value] || value
+// 日期格式化
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''; 
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
 // 过滤后的反馈列表
@@ -150,8 +124,10 @@ const filteredFeedback = computed(() => {
   if (searchText.value) {
     const search = searchText.value.toLowerCase()
     result = result.filter(item => 
-      item.student_name.toLowerCase().includes(search) ||
-      item.company.toLowerCase().includes(search)
+      (item.student_name && item.student_name.toLowerCase().includes(search)) ||
+      (item.student_number && item.student_number.toLowerCase().includes(search)) ||
+      (item.major && item.major.toLowerCase().includes(search)) ||
+      (item.class_name && item.class_name.toLowerCase().includes(search))
     )
   }
   
@@ -162,15 +138,56 @@ const filteredFeedback = computed(() => {
 const fetchFeedbackRecords = async () => {
   loading.value = true
   try {
-    // 使用模拟数据
-    const res = mockGetFeedbackRecords()
+    // 获取当前辅导员ID
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('用户未登录或登录信息已失效')
+      return
+    }
+    
+    // 从后端获取数据
+    const res = await getFeedbackRecords({ counselorId })
     if (res.code === 200) {
       feedbackList.value = res.data
+    } else {
+      ElMessage.error(res.message || '获取反馈信息失败')
     }
   } catch (error) {
+    console.error('获取反馈信息失败:', error)
     ElMessage.error(error.message || '获取反馈信息失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 处理审核
+const handleApprove = async (row) => {
+  try {
+    // 获取当前辅导员ID
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('用户未登录或登录信息已失效')
+      return
+    }
+    
+    const res = await approveFeedback(row.feedback_id, {
+      status: 'approved',
+      counselorId
+    })
+    
+    if (res.code === 200) {
+      ElMessage.success('审核通过成功')
+      // 更新本地数据
+      const index = feedbackList.value.findIndex(item => item.feedback_id === row.feedback_id)
+      if (index !== -1) {
+        feedbackList.value[index].status = 'approved'
+      }
+    } else {
+      ElMessage.error(res.message || '审核失败')
+    }
+  } catch (error) {
+    console.error('审核反馈失败:', error)
+    ElMessage.error(error.message || '审核失败')
   }
 }
 
@@ -182,23 +199,31 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      // 模拟成功响应
-      ElMessage.success('删除成功')
-      // 从本地数据中移除
-      const index = feedbackList.value.findIndex(item => item.feedback_id === row.feedback_id)
-      if (index !== -1) {
-        feedbackList.value.splice(index, 1)
+      // 获取当前辅导员ID
+      const counselorId = getUserId()
+      if (!counselorId) {
+        ElMessage.error('用户未登录或登录信息已失效')
+        return
+      }
+      
+      const res = await deleteFeedback(row.feedback_id, { counselorId })
+      
+      if (res.code === 200) {
+        ElMessage.success('删除成功')
+        // 从本地数据中移除
+        const index = feedbackList.value.findIndex(item => item.feedback_id === row.feedback_id)
+        if (index !== -1) {
+          feedbackList.value.splice(index, 1)
+        }
+      } else {
+        // 处理没有权限或记录不存在的情况
+        ElMessage.error(res.message || '删除失败，可能没有权限或记录不存在')
       }
     } catch (error) {
+      console.error('删除反馈失败:', error)
       ElMessage.error(error.message || '删除失败')
     }
   }).catch(() => {})
-}
-
-// 查看详情
-const viewDetail = (row) => {
-  currentFeedback.value = { ...row }
-  dialogVisible.value = true
 }
 
 // 处理搜索
@@ -213,7 +238,7 @@ onMounted(() => {
 
 <style scoped>
 .feedback {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -252,19 +277,8 @@ onMounted(() => {
   align-items: center;
 }
 
-.ratings {
-  line-height: 1.6;
-}
-
-.feedback-content {
-  margin: 0;
-  white-space: pre-wrap;
-  font-family: inherit;
-  color: #606266;
-  line-height: 1.6;
-}
-
-:deep(.el-descriptions__label) {
-  font-weight: bold;
+.text-secondary {
+  font-size: 12px;
+  color: #909399;
 }
 </style> 

@@ -4,6 +4,7 @@ import com.empsys.backend.entity.Students;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import java.util.List;
 
 /**
 * @author Quagmire
@@ -20,6 +21,13 @@ public interface StudentsMapper extends BaseMapper<Students> {
      * @return 学生信息（包括辅导员姓名）
      */
     Students selectStudentInfoByUserId(@Param("userId") Long userId);
+    
+    /**
+     * 根据辅导员ID查询学生列表
+     * @param counselorId 辅导员ID
+     * @return 学生列表
+     */
+    List<Students> selectStudentsByCounselorId(@Param("counselorId") Long counselorId);
 }
 
 

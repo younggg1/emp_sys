@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author Quagmire
@@ -68,6 +69,36 @@ public interface FeedbackRecordsMapper extends BaseMapper<FeedbackRecords> {
      * @return 反馈记录数（应为0或1）
      */
     int countFeedbackRecordByIdAndStudentId(@Param("feedbackId") Long feedbackId, @Param("studentId") Long studentId);
+    
+    /**
+     * 获取辅导员负责的学生反馈列表
+     * @param counselorId 辅导员ID
+     * @return 反馈列表
+     */
+    List<Map<String, Object>> selectFeedbackRecordsByCounselorId(@Param("counselorId") Long counselorId);
+    
+    /**
+     * 分页获取辅导员负责的学生反馈列表
+     * @param page 分页参数
+     * @param counselorId 辅导员ID
+     * @return 分页后的反馈列表
+     */
+    IPage<Map<String, Object>> selectFeedbackRecordsPageByCounselorId(Page<Map<String, Object>> page, @Param("counselorId") Long counselorId);
+    
+    /**
+     * 验证反馈是否属于辅导员负责的学生
+     * @param feedbackId 反馈ID
+     * @param counselorId 辅导员ID
+     * @return 反馈记录数（应为0或1）
+     */
+    int countFeedbackRecordByIdAndCounselorId(@Param("feedbackId") Long feedbackId, @Param("counselorId") Long counselorId);
+    
+    /**
+     * 获取反馈详情（包含学生信息）
+     * @param feedbackId 反馈ID
+     * @return 反馈详情
+     */
+    Map<String, Object> selectFeedbackRecordDetailById(@Param("feedbackId") Long feedbackId);
 }
 
 

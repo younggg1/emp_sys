@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author Quagmire
@@ -68,6 +69,21 @@ public interface EmploymentRecordsMapper extends BaseMapper<EmploymentRecords> {
      * @return 就业信息记录数（应为0或1）
      */
     int countEmploymentRecordByIdAndStudentId(@Param("recordId") Long recordId, @Param("studentId") Long studentId);
+    
+    /**
+     * 获取辅导员负责的学生就业信息列表
+     * @param counselorId 辅导员ID
+     * @return 就业信息列表（包含学生信息）
+     */
+    List<Map<String, Object>> selectEmploymentRecordsByCounselorId(@Param("counselorId") Long counselorId);
+    
+    /**
+     * 验证就业信息是否属于辅导员负责的学生
+     * @param recordId 记录ID
+     * @param counselorId 辅导员ID
+     * @return 就业信息记录数（应为0或1）
+     */
+    int countEmploymentRecordByIdAndCounselorId(@Param("recordId") Long recordId, @Param("counselorId") Long counselorId);
 }
 
 

@@ -17,6 +17,25 @@
             <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
             <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
     </resultMap>
+    
+    <!-- 就业信息详情结果映射（包含学生信息） -->
+    <resultMap id="EmploymentDetailMap" type="java.util.HashMap">
+        <id property="record_id" column="record_id" jdbcType="BIGINT"/>
+        <result property="student_id" column="student_id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="major" column="major" jdbcType="VARCHAR"/>
+        <result property="class_name" column="class_name" jdbcType="VARCHAR"/>
+        <result property="studentId" column="username" jdbcType="VARCHAR"/>
+        <result property="company_nature" column="company_nature" jdbcType="VARCHAR"/>
+        <result property="company" column="company" jdbcType="VARCHAR"/>
+        <result property="position" column="position" jdbcType="VARCHAR"/>
+        <result property="salary" column="salary" jdbcType="DECIMAL"/>
+        <result property="entry_date" column="entry_date" jdbcType="DATE"/>
+        <result property="region" column="region" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
 
     <sql id="Base_Column_List">
         record_id,student_id,company_nature,
@@ -70,15 +89,16 @@
     <!-- 更新就业信息 -->
     <update id="updateEmploymentRecord" parameterType="com.empsys.backend.entity.EmploymentRecords">
         UPDATE employment_records
-        SET 
-            company_nature = #{company_nature},
-            company = #{company},
-            position = #{position},
-            salary = #{salary},
-            entry_date = #{entry_date},
-            region = #{region},
-            status = #{status},
-            updated_at = #{updated_at}
+        <set>
+            <if test="company_nature != null">company_nature = #{company_nature},</if>
+            <if test="company != null">company = #{company},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="salary != null">salary = #{salary},</if>
+            <if test="entry_date != null">entry_date = #{entry_date},</if>
+            <if test="region != null">region = #{region},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updated_at != null">updated_at = #{updated_at}</if>
+        </set>
         WHERE record_id = #{record_id}
     </update>
     
@@ -87,4 +107,32 @@
         DELETE FROM employment_records
         WHERE record_id = #{recordId}
     </delete>
+    
+    <!-- 获取辅导员负责的学生就业信息列表 -->
+    <select id="selectEmploymentRecordsByCounselorId" resultMap="EmploymentDetailMap">
+        SELECT 
+            e.*,
+            s.name,
+            s.major,
+            s.class_name,
+            u.username
+        FROM 
+            employment_records e
+        JOIN 
+            students s ON e.student_id = s.student_id
+        JOIN
+            users u ON s.student_id = u.user_id
+        WHERE 
+            s.counselor_id = #{counselorId}
+        ORDER BY 
+            e.created_at DESC
+    </select>
+    
+    <!-- 验证就业信息是否属于辅导员负责的学生 -->
+    <select id="countEmploymentRecordByIdAndCounselorId" resultType="int">
+        SELECT COUNT(1)
+        FROM employment_records e
+        JOIN students s ON e.student_id = s.student_id
+        WHERE e.record_id = #{recordId} AND s.counselor_id = #{counselorId}
+    </select>
 </mapper>

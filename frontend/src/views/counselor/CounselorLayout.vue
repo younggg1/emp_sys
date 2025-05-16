@@ -45,10 +45,6 @@
               <el-icon><chat-dot-round /></el-icon>
               <span>就业反馈审核</span>
             </el-menu-item>
-            <el-menu-item index="/counselor/statistics">
-              <el-icon><pie-chart /></el-icon>
-              <span>就业数据统计</span>
-            </el-menu-item>
           </el-menu>
         </el-aside>
         
@@ -65,7 +61,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getUser, clearUser } from '@/utils/user'
-import { HomeFilled, Document, ChatDotRound, PieChart, ArrowDown } from '@element-plus/icons-vue'
+import { HomeFilled, Document, ChatDotRound, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
 const router = useRouter()

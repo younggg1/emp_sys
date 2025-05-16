@@ -29,8 +29,7 @@
         :data="filteredEmployment"
         :columns="columns"
         :loading="loading"
-        @edit="handleEdit"
-        @delete="handleDelete"
+        :showActions="false"
       >
         <template #status="{ row }">
           <el-tag :type="row.status === 'approved' ? 'success' : 'warning'">
@@ -38,166 +37,55 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button size="small" type="primary" @click="handleEdit(row)">
-            <el-icon><edit /></el-icon> 编辑
+          <el-button 
+            v-if="row.status === 'pending'" 
+            size="small" 
+            type="success" 
+            @click="handleApprove(row)"
+          >
+            <el-icon><check /></el-icon> 审核
           </el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">
+          <el-button 
+            size="small" 
+            type="danger" 
+            @click="handleDelete(row)"
+          >
             <el-icon><delete /></el-icon> 删除
           </el-button>
         </template>
       </DataTable>
     </el-card>
-    
-    <!-- 编辑就业信息表单 -->
-    <el-dialog
-      title="编辑就业信息"
-      v-model="dialogVisible"
-      width="50%"
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="120px"
-        label-position="right"
-      >
-        <el-form-item label="学生" prop="student_id">
-          <el-select v-model="form.student_id" placeholder="请选择学生" style="width: 100%" disabled>
-            <el-option 
-              v-for="student in students" 
-              :key="student.student_id" 
-              :label="`${student.name} (${student.student_id})`" 
-              :value="student.student_id" 
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="form.name" placeholder="请输入姓名" />
-        </el-form-item>
-        
-        <el-form-item label="专业" prop="major">
-          <el-input v-model="form.major" placeholder="请输入专业" />
-        </el-form-item>
-        
-        <el-form-item label="专业类别" prop="major_category">
-          <el-select v-model="form.major_category" placeholder="请选择专业类别" style="width: 100%">
-            <el-option label="理工类" value="science" />
-            <el-option label="文史类" value="humanities" />
-            <el-option label="体育类" value="sports" />
-            <el-option label="艺术类" value="arts" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="企业性质" prop="company_nature">
-          <el-input v-model="form.company_nature" placeholder="请输入企业性质" />
-        </el-form-item>
-        
-        <el-form-item label="公司名称" prop="company">
-          <el-input v-model="form.company" placeholder="请输入公司名称" />
-        </el-form-item>
-        
-        <el-form-item label="职位" prop="position">
-          <el-input v-model="form.position" placeholder="请输入职位" />
-        </el-form-item>
-        
-        <el-form-item label="月薪" prop="salary">
-          <el-input-number v-model="form.salary" :min="0" :precision="2" :step="1000" style="width: 100%" />
-        </el-form-item>
-        
-        <el-form-item label="入职日期" prop="entry_date">
-          <el-date-picker
-            v-model="form.entry_date"
-            type="date"
-            placeholder="选择日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-        
-        <el-form-item label="地区" prop="region">
-          <el-input v-model="form.region" placeholder="请输入地区（城市）" />
-        </el-form-item>
-        
-        <el-form-item label="审核状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
-            <el-option label="已审核" value="approved" />
-            <el-option label="待审核" value="pending" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm" :loading="submitting">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Briefcase, Search, Edit, Delete } from '@element-plus/icons-vue'
+import { Briefcase, Search, Delete, Check } from '@element-plus/icons-vue'
 import DataTable from '@/components/DataTable.vue'
-import { getEmploymentRecords, editEmployment, deleteEmployment, mockGetEmploymentRecords, getStudents, mockGetStudents } from '@/api/counselor'
+import { getEmploymentRecords, deleteEmployment, getStudents, approveEmployment } from '@/api/counselor'
+import { getUserId } from '@/utils/user'
 
 // 表格列定义
 const columns = [
-  { prop: 'student_id', label: '学号', width: '100' },
+  { prop: 'studentId', label: '学号', width: '120' },
   { prop: 'name', label: '姓名', width: '100' },
   { prop: 'major', label: '专业' },
-  { prop: 'major_category', label: '专业类别', formatter: (row) => {
-    const map = { science: '理工类', humanities: '文史类', sports: '体育类', arts: '艺术类' }
-    return map[row.major_category] || row.major_category
-  }},
+  { prop: 'company_nature', label: '企业性质' },
   { prop: 'company', label: '公司名称' },
   { prop: 'position', label: '职位' },
-  { prop: 'salary', label: '月薪' },
+  { prop: 'salary', label: '月薪' ,width:'70'},
   { prop: 'entry_date', label: '入职日期' },
-  { prop: 'region', label: '地区' },
-  { prop: 'status', label: '状态', slot: 'status' }
+  { prop: 'region', label: '地区' ,width:'80'},
+  { prop: 'status', label: '状态', slot: 'status', width: '100' },
+  { prop: 'actions', label: '操作', width: '220', slot: 'actions' }
 ]
 
 const loading = ref(false)
-const submitting = ref(false)
 const employmentList = ref([])
 const students = ref([])
-const dialogVisible = ref(false)
 const searchText = ref('')
 const filterStatus = ref('')
-const currentRecordId = ref(null)
-const formRef = ref(null)
-
-// 表单数据
-const form = reactive({
-  student_id: '',
-  name: '',
-  major: '',
-  major_category: '',
-  company_nature: '',
-  company: '',
-  position: '',
-  salary: 0,
-  entry_date: '',
-  region: '',
-  status: ''
-})
-
-// 表单验证规则
-const rules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  major: [{ required: true, message: '请输入专业', trigger: 'blur' }],
-  major_category: [{ required: true, message: '请选择专业类别', trigger: 'change' }],
-  company_nature: [{ required: true, message: '请输入企业性质', trigger: 'blur' }],
-  company: [{ required: true, message: '请输入公司名称', trigger: 'blur' }],
-  position: [{ required: true, message: '请输入职位', trigger: 'blur' }],
-  salary: [{ required: true, message: '请输入月薪', trigger: 'blur' }],
-  entry_date: [{ required: true, message: '请选择入职日期', trigger: 'change' }],
-  region: [{ required: true, message: '请输入地区', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
-}
 
 // 过滤后的就业信息列表
 const filteredEmployment = computed(() => {
@@ -225,10 +113,20 @@ const filteredEmployment = computed(() => {
 const fetchEmploymentRecords = async () => {
   loading.value = true
   try {
-    // 使用模拟数据
-    const res = mockGetEmploymentRecords()
+    // 获取当前登录的辅导员ID
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('未获取到辅导员ID，请重新登录')
+      return
+    }
+    
+    // 调用API获取就业信息列表
+    const res = await getEmploymentRecords({ counselorId })
+    
     if (res.code === 200) {
       employmentList.value = res.data
+    } else {
+      ElMessage.error(res.message || '获取就业信息失败')
     }
   } catch (error) {
     ElMessage.error(error.message || '获取就业信息失败')
@@ -240,53 +138,55 @@ const fetchEmploymentRecords = async () => {
 // 获取学生列表（用于表单选择）
 const fetchStudents = async () => {
   try {
-    // 使用模拟数据
-    const res = mockGetStudents()
+    // 获取当前登录的辅导员ID
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('未获取到辅导员ID，请重新登录')
+      return
+    }
+    
+    // 调用API获取学生列表
+    const res = await getStudents({ counselorId })
+    
     if (res.code === 200) {
       students.value = res.data
+    } else {
+      ElMessage.error(res.message || '获取学生列表失败')
     }
   } catch (error) {
     ElMessage.error(error.message || '获取学生列表失败')
   }
 }
 
-// 处理编辑
-const handleEdit = (row) => {
-  dialogVisible.value = true
-  currentRecordId.value = row.record_id
-  
-  // 填充表单
-  Object.keys(form).forEach(key => {
-    form[key] = row[key]
-  })
-}
-
-// 提交表单
-const submitForm = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-    
-    submitting.value = true
-    
-    try {
-      // 模拟成功响应
-      ElMessage.success('更新成功')
-      
-      // 更新本地数据
-      const index = employmentList.value.findIndex(item => item.record_id === currentRecordId.value)
-      if (index !== -1) {
-        employmentList.value[index] = { ...employmentList.value[index], ...form }
-      }
-      
-      dialogVisible.value = false
-    } catch (error) {
-      ElMessage.error(error.message || '编辑失败')
-    } finally {
-      submitting.value = false
+// 审核通过
+const handleApprove = async (row) => {
+  try {
+    // 获取当前辅导员ID
+    const counselorId = getUserId();
+    if (!counselorId) {
+      ElMessage.error('用户未登录或登录信息已失效');
+      return;
     }
-  })
+    
+    const res = await approveEmployment(row.record_id, {
+      status: 'approved',
+      counselorId
+    });
+    
+    if (res.code === 200) {
+      ElMessage.success('审核通过成功');
+      // 更新本地数据
+      const index = employmentList.value.findIndex(item => item.record_id === row.record_id);
+      if (index !== -1) {
+        employmentList.value[index].status = 'approved';
+      }
+    } else {
+      ElMessage.error(res.message || '审核失败');
+    }
+  } catch (error) {
+    console.error('审核就业信息失败:', error);
+    ElMessage.error(error.message || '审核失败');
+  }
 }
 
 // 处理删除
@@ -297,13 +197,26 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      // 模拟成功响应
-      ElMessage.success('删除成功')
+      const counselorId = getUserId()
+      if (!counselorId) {
+        ElMessage.error('未获取到辅导员ID，请重新登录')
+        return
+      }
       
-      // 从本地数据中移除
-      const index = employmentList.value.findIndex(item => item.record_id === row.record_id)
-      if (index !== -1) {
-        employmentList.value.splice(index, 1)
+      // 调用API删除数据
+      const res = await deleteEmployment(row.record_id, { counselorId })
+      
+      if (res.code === 200) {
+        ElMessage.success('删除成功')
+        
+        // 从本地数据中移除
+        const index = employmentList.value.findIndex(item => item.record_id === row.record_id)
+        if (index !== -1) {
+          employmentList.value.splice(index, 1)
+        }
+      } else {
+        // 处理没有权限或记录不存在的情况
+        ElMessage.error(res.message || '删除失败，可能没有权限或记录不存在')
       }
     } catch (error) {
       ElMessage.error(error.message || '删除失败')
@@ -324,7 +237,7 @@ onMounted(() => {
 
 <style scoped>
 .employment {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 

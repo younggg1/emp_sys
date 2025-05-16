@@ -20,6 +20,8 @@
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
+        <br>
+        <h5>如果上述信息与本人不符请联系学校管理员修改</h5>
       </div>
     </el-card>
   </div>

@@ -78,4 +78,96 @@
         DELETE FROM feedback_records
         WHERE feedback_id = #{feedbackId}
     </delete>
+    
+    <!-- 获取辅导员负责的学生反馈列表 -->
+    <select id="selectFeedbackRecordsByCounselorId" resultType="java.util.Map">
+        SELECT 
+            f.feedback_id,
+            f.student_id,
+            s.name AS student_name,
+            u.username AS student_number,
+            f.stage,
+            f.content,
+            f.status,
+            f.created_at,
+            f.updated_at,
+            s.major,
+            s.class_name
+        FROM 
+            feedback_records f
+        INNER JOIN 
+            students s ON f.student_id = s.student_id
+        INNER JOIN 
+            users u ON s.student_id = u.user_id
+        WHERE 
+            s.counselor_id = #{counselorId}
+        ORDER BY 
+            f.created_at DESC
+    </select>
+    
+    <!-- 分页获取辅导员负责的学生反馈列表 -->
+    <select id="selectFeedbackRecordsPageByCounselorId" resultType="java.util.Map">
+        SELECT 
+            f.feedback_id,
+            f.student_id,
+            s.name AS student_name,
+            u.username AS student_number,
+            f.stage,
+            f.content,
+            f.status,
+            f.created_at,
+            f.updated_at,
+            s.major,
+            s.class_name
+        FROM 
+            feedback_records f
+        INNER JOIN 
+            students s ON f.student_id = s.student_id
+        INNER JOIN 
+            users u ON s.student_id = u.user_id
+        WHERE 
+            s.counselor_id = #{counselorId}
+        ORDER BY 
+            f.created_at DESC
+    </select>
+    
+    <!-- 验证反馈是否属于辅导员负责的学生 -->
+    <select id="countFeedbackRecordByIdAndCounselorId" resultType="int">
+        SELECT COUNT(1)
+        FROM 
+            feedback_records f
+        INNER JOIN 
+            students s ON f.student_id = s.student_id
+        WHERE 
+            f.feedback_id = #{feedbackId} 
+            AND s.counselor_id = #{counselorId}
+    </select>
+    
+    <!-- 获取反馈详情（包含学生信息） -->
+    <select id="selectFeedbackRecordDetailById" resultType="java.util.Map">
+        SELECT 
+            f.feedback_id,
+            f.student_id,
+            s.name AS student_name,
+            u.username AS student_number,
+            f.stage,
+            f.content,
+            f.status,
+            f.created_at,
+            f.updated_at,
+            s.major,
+            s.class_name,
+            s.college,
+            s.grade,
+            s.employment_status
+        FROM 
+            feedback_records f
+        INNER JOIN 
+            students s ON f.student_id = s.student_id
+        INNER JOIN 
+            users u ON s.student_id = u.user_id
+        WHERE 
+            f.feedback_id = #{feedbackId}
+        LIMIT 1
+    </select>
 </mapper>

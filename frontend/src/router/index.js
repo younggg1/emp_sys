@@ -43,7 +43,7 @@ const router = createRouter({
         {
           path: '',
           name: 'counselorHome',
-          component: () => import('../views/counselor/Dashboard.vue')
+          component: () => import('../views/counselor/Classes.vue')
         },
         {
           path: 'employment',
@@ -54,11 +54,6 @@ const router = createRouter({
           path: 'feedback',
           name: 'counselorFeedback',
           component: () => import('../views/counselor/Feedback.vue')
-        },
-        {
-          path: 'statistics',
-          name: 'counselorStatistics',
-          component: () => import('../views/counselor/Statistics.vue')
         }
       ]
     },

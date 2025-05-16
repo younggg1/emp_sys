@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author Quagmire
@@ -57,4 +58,30 @@ public interface EmploymentRecordsService extends IService<EmploymentRecords> {
      * @return 就业信息
      */
     EmploymentRecords getEmploymentRecordById(Long recordId);
+    
+    /**
+     * 获取辅导员负责的学生就业信息列表
+     * @param counselorId 辅导员ID
+     * @return 就业信息列表（包含学生信息）
+     */
+    List<Map<String, Object>> getEmploymentRecordsByCounselorId(Long counselorId);
+    
+    /**
+     * 辅导员审核就业信息
+     * @param recordId 记录ID
+     * @param status 状态（approved/rejected）
+     * @param counselorId 辅导员ID（用于验证权限）
+     * @return 是否审核成功
+     */
+    boolean approveEmploymentRecord(Long recordId, String status, Long counselorId);
+    
+
+    
+    /**
+     * 辅导员删除就业信息
+     * @param recordId 记录ID
+     * @param counselorId 辅导员ID（用于验证权限）
+     * @return 是否删除成功
+     */
+    boolean deleteEmploymentRecordByCounselor(Long recordId, Long counselorId);
 }

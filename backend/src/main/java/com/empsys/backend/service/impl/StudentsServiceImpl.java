@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 /**
 * @author Quagmire
@@ -37,6 +38,18 @@ public class StudentsServiceImpl extends ServiceImpl<StudentsMapper, Students>
         }
         
         return studentInfo;
+    }
+    
+    @Override
+    public List<Students> getStudentsByCounselorId(Long counselorId) {
+        logger.info("获取辅导员ID为{}的学生列表", counselorId);
+        
+        // 调用mapper查询辅导员负责的学生列表
+        List<Students> students = studentsMapper.selectStudentsByCounselorId(counselorId);
+        
+        logger.info("找到{}条学生记录", students.size());
+        
+        return students;
     }
 }
 

@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author Quagmire
@@ -75,6 +77,68 @@ public class FeedbackRecordsServiceImpl extends ServiceImpl<FeedbackRecordsMappe
     public FeedbackRecords getFeedbackRecordById(Long feedbackId) {
         logger.info("根据ID获取反馈记录：{}", feedbackId);
         return feedbackRecordsMapper.selectFeedbackRecordById(feedbackId);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getFeedbackRecordsByCounselorId(Long counselorId) {
+        logger.info("获取辅导员ID为{}负责学生的反馈列表", counselorId);
+        return feedbackRecordsMapper.selectFeedbackRecordsByCounselorId(counselorId);
+    }
+    
+    @Override
+    public IPage<Map<String, Object>> getFeedbackRecordsPageByCounselorId(Page<Map<String, Object>> page, Long counselorId) {
+        logger.info("分页获取辅导员ID为{}负责学生的反馈列表，页码：{}，大小：{}", counselorId, page.getCurrent(), page.getSize());
+        return feedbackRecordsMapper.selectFeedbackRecordsPageByCounselorId(page, counselorId);
+    }
+    
+    @Override
+    public boolean approveFeedbackRecord(Long feedbackId, String status, Long counselorId) {
+        logger.info("辅导员审核反馈记录，反馈ID：{}，状态：{}，辅导员ID：{}", feedbackId, status, counselorId);
+        // 验证记录是否存在并且属于辅导员负责的学生
+        int count = feedbackRecordsMapper.countFeedbackRecordByIdAndCounselorId(feedbackId, counselorId);
+        if (count == 0) {
+            logger.warn("反馈记录不存在或不属于辅导员负责的学生，记录ID：{}，辅导员ID：{}", feedbackId, counselorId);
+            return false;
+        }
+        
+        // 获取反馈记录
+        FeedbackRecords record = feedbackRecordsMapper.selectFeedbackRecordById(feedbackId);
+        if (record == null) {
+            logger.warn("反馈记录不存在，记录ID：{}", feedbackId);
+            return false;
+        }
+        
+        // 更新反馈状态
+        record.setStatus(status);
+        record.setUpdated_at(new Date());
+        
+        return feedbackRecordsMapper.updateFeedbackRecord(record) > 0;
+    }
+    
+    @Override
+    public boolean deleteFeedbackRecordByCounselor(Long feedbackId, Long counselorId) {
+        logger.info("辅导员删除反馈记录，反馈ID：{}，辅导员ID：{}", feedbackId, counselorId);
+        // 验证记录是否存在并且属于辅导员负责的学生
+        int count = feedbackRecordsMapper.countFeedbackRecordByIdAndCounselorId(feedbackId, counselorId);
+        if (count == 0) {
+            logger.warn("反馈记录不存在或不属于辅导员负责的学生，记录ID：{}，辅导员ID：{}", feedbackId, counselorId);
+            return false;
+        }
+        
+        return feedbackRecordsMapper.deleteFeedbackRecord(feedbackId) > 0;
+    }
+    
+    @Override
+    public Map<String, Object> getFeedbackRecordDetailByCounselor(Long feedbackId, Long counselorId) {
+        logger.info("获取反馈详情（辅导员视角），反馈ID：{}，辅导员ID：{}", feedbackId, counselorId);
+        // 验证记录是否存在并且属于辅导员负责的学生
+        int count = feedbackRecordsMapper.countFeedbackRecordByIdAndCounselorId(feedbackId, counselorId);
+        if (count == 0) {
+            logger.warn("反馈记录不存在或不属于辅导员负责的学生，记录ID：{}，辅导员ID：{}", feedbackId, counselorId);
+            return null;
+        }
+        
+        return feedbackRecordsMapper.selectFeedbackRecordDetailById(feedbackId);
     }
 }
 

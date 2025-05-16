@@ -4,17 +4,22 @@
       <template #header>
         <div class="card-header">
           <span><el-icon class="header-icon"><user-filled /></el-icon> 班级学生信息</span>
-          <el-input
-            v-model="searchText"
-            placeholder="搜索学生姓名/学号/专业"
-            style="width: 300px"
-            clearable
-            @input="handleSearch"
-          >
-            <template #prefix>
-              <el-icon><search /></el-icon>
-            </template>
-          </el-input>
+          <div class="header-actions">
+            <el-button type="primary" size="small" @click="fetchStudents" :loading="loading">
+              <el-icon><refresh /></el-icon> 刷新
+            </el-button>
+            <el-input
+              v-model="searchText"
+              placeholder="搜索学生姓名/学号"
+              style="width: 300px; margin-left: 10px;"
+              clearable
+              @input="handleSearch"
+            >
+              <template #prefix>
+                <el-icon><search /></el-icon>
+              </template>
+            </el-input>
+          </div>
         </div>
       </template>
       
@@ -40,7 +45,7 @@
       </template>
       <div class="stats-container">
         <div class="stat-item">
-          <div class="stat-title">学生总数</div>
+          <div class="stat-title">本班学生总数</div>
           <div class="stat-value">{{ stats.total }}</div>
         </div>
         <div class="stat-item">
@@ -63,21 +68,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UserFilled, Search, DataAnalysis } from '@element-plus/icons-vue'
+import { UserFilled, Search, DataAnalysis, Refresh } from '@element-plus/icons-vue'
 import DataTable from '@/components/DataTable.vue'
-import { getStudents, mockGetStudents } from '@/api/counselor'
+import { getStudents } from '@/api/counselor'
+import { getUserId } from '@/utils/user'
 
 // 表格列定义
 const columns = [
-  { prop: 'student_id', label: '学号', width: '120' },
+  { prop: 'studentId', label: '学号', width: '120' },
   { prop: 'name', label: '姓名', width: '100' },
-  { prop: 'gender', label: '性别', width: '80' },
+  { prop: 'grade', label: '年级', width: '100' },
   { prop: 'class_name', label: '班级' },
   { prop: 'college', label: '学院' },
   { prop: 'major', label: '专业' },
-  { prop: 'employment_status', label: '就业状态', slot: 'employment_status' },
-  { prop: 'phone', label: '联系电话' },
-  { prop: 'email', label: '邮箱' }
+  { prop: 'employment_status', label: '就业状态', slot: 'employment_status' }
 ]
 
 const loading = ref(false)
@@ -91,7 +95,7 @@ const filteredStudents = computed(() => {
   const search = searchText.value.toLowerCase()
   return students.value.filter(student => 
     student.name.toLowerCase().includes(search) ||
-    student.student_id.toString().includes(search) ||
+    (student.studentId && student.studentId.toString().toLowerCase().includes(search)) ||
     student.major.toLowerCase().includes(search)
   )
 })
@@ -115,10 +119,20 @@ const stats = computed(() => {
 const fetchStudents = async () => {
   loading.value = true
   try {
-    // 使用模拟数据
-    const res = mockGetStudents()
+    // 获取当前登录的辅导员ID
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('未获取到辅导员ID，请重新登录')
+      return
+    }
+    
+    // 调用API获取学生列表
+    const res = await getStudents({ counselorId })
+    
     if (res.code === 200) {
       students.value = res.data
+    } else {
+      ElMessage.error(res.message || '获取学生信息失败')
     }
   } catch (error) {
     ElMessage.error(error.message || '获取学生信息失败')
@@ -139,7 +153,7 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -205,5 +219,10 @@ onMounted(() => {
   color: #409EFF;
   font-size: 28px;
   font-weight: bold;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
 }
 </style> 
