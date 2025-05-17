@@ -6,14 +6,18 @@
           <template #header>
             <div class="card-header">
               <span>就业情况概览</span>
-              <el-select v-model="yearFilter" placeholder="选择年份" style="width: 120px">
-                <el-option
-                  v-for="item in yearOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
+              <el-input
+                v-model="yearFilter"
+                placeholder="请输入年份"
+                style="width: 180px"
+                @keyup.enter="fetchAndUpdateData"
+              >
+                <template #append>
+                  <el-button @click="fetchAndUpdateData">
+                    <el-icon><Search /></el-icon>
+                  </el-button>
+                </template>
+              </el-input>
             </div>
           </template>
           
@@ -36,7 +40,7 @@
     </el-row>
 
     <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card shadow="hover" class="chart-card">
           <template #header>
             <div class="card-header">
@@ -46,7 +50,7 @@
           <div ref="regionChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card shadow="hover" class="chart-card">
           <template #header>
             <div class="card-header">
@@ -56,10 +60,7 @@
           <div ref="companyChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
-    </el-row>
-
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="12">
+      <el-col :span="8">
         <el-card shadow="hover" class="chart-card">
           <template #header>
             <div class="card-header">
@@ -69,89 +70,37 @@
           <div ref="salaryChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
-      <el-col :span="12">
-        <el-card shadow="hover" class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <span>专业类别分布</span>
-            </div>
-          </template>
-          <div ref="majorChartRef" style="height: 300px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="24">
-        <el-card shadow="hover" class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <span>学院就业率对比</span>
-            </div>
-          </template>
-          <div ref="collegeChartRef" style="height: 400px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="24">
-        <el-card shadow="hover" class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <span>月度就业人数趋势</span>
-            </div>
-          </template>
-          <div ref="trendChartRef" style="height: 400px;"></div>
-        </el-card>
-      </el-col>
     </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { ArrowUp, ArrowDown, Search } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import { getCompanyNatureStats, getSalaryStats, getRegionStats } from '@/api/admin'
+import { ElMessage } from 'element-plus'
 
-// 年份下拉选项
-const yearFilter = ref('2023')
-const yearOptions = [
-  { label: '2023年', value: '2023' },
-  { label: '2022年', value: '2022' },
-  { label: '2021年', value: '2021' },
-  { label: '2020年', value: '2020' }
-]
+// 年份输入
+const yearFilter = ref('2025')
 
 // 概览数据
 const summaryData = ref([
-  { label: '毕业生总数', value: '2,568人', trend: 0 },
-  { label: '就业人数', value: '2,380人', trend: 5.2 },
-  { label: '就业率', value: '92.7%', trend: 3.1 },
-  { label: '平均薪资', value: '8,450元', trend: 7.6 }
+  { label: '毕业生总数', value: '0人', trend: 0 },
+  { label: '就业人数', value: '0人', trend: 0 },
+  { label: '就业率', value: '0%', trend: 0 },
+  { label: '平均薪资', value: '0元', trend: 0 }
 ])
 
 // 图表实例和引用
 const regionChartRef = ref(null)
 const companyChartRef = ref(null)
 const salaryChartRef = ref(null)
-const majorChartRef = ref(null)
-const collegeChartRef = ref(null)
-const trendChartRef = ref(null)
 
 // 各图表实例
 let regionChart = null
 let companyChart = null
 let salaryChart = null
-let majorChart = null
-let collegeChart = null
-let trendChart = null
-
-// 监听年份变化
-watch(yearFilter, () => {
-  // 重新获取数据并更新图表
-  fetchAndUpdateData()
-})
 
 // 初始化所有图表
 const initCharts = () => {
@@ -164,12 +113,11 @@ const initCharts = () => {
     },
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: '{a} <br/>{b}: {c}人 ({d}%)'
     },
     legend: {
       orient: 'vertical',
-      left: 'left',
-      data: ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '其他']
+      left: 'left'
     },
     series: [
       {
@@ -183,8 +131,9 @@ const initCharts = () => {
           borderWidth: 2
         },
         label: {
-          show: false,
-          position: 'center'
+          show: true,
+          position: 'outside',
+          formatter: '{b}: {c}人'
         },
         emphasis: {
           label: {
@@ -194,18 +143,9 @@ const initCharts = () => {
           }
         },
         labelLine: {
-          show: false
+          show: true
         },
-        data: [
-          { value: 450, name: '北京' },
-          { value: 410, name: '上海' },
-          { value: 380, name: '广州' },
-          { value: 350, name: '深圳' },
-          { value: 300, name: '杭州' },
-          { value: 250, name: '成都' },
-          { value: 150, name: '武汉' },
-          { value: 90, name: '其他' }
-        ]
+        data: []
       }
     ]
   })
@@ -215,12 +155,11 @@ const initCharts = () => {
   companyChart.setOption({
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: '{a} <br/>{b}: {c}人 ({d}%)'
     },
     legend: {
       orient: 'vertical',
-      left: 'left',
-      data: ['国企', '私企', '外企', '事业单位', '公务员', '其他']
+      left: 'left'
     },
     series: [
       {
@@ -228,14 +167,12 @@ const initCharts = () => {
         type: 'pie',
         radius: '60%',
         center: ['55%', '50%'],
-        data: [
-          { value: 680, name: '私企' },
-          { value: 520, name: '国企' },
-          { value: 420, name: '外企' },
-          { value: 310, name: '事业单位' },
-          { value: 280, name: '公务员' },
-          { value: 170, name: '其他' }
-        ],
+        data: [],
+        label: {
+          show: true,
+          position: 'outside',
+          formatter: '{b}: {c}人'
+        },
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
@@ -265,7 +202,7 @@ const initCharts = () => {
     xAxis: [
       {
         type: 'category',
-        data: ['<5k', '5k-8k', '8k-10k', '10k-15k', '15k-20k', '>20k'],
+        data: ['5000以下', '5000-8000', '8000-12000', '12000以上'],
         axisTick: {
           alignWithLabel: true
         }
@@ -273,7 +210,8 @@ const initCharts = () => {
     ],
     yAxis: [
       {
-        type: 'value'
+        type: 'value',
+        name: '人数'
       }
     ],
     series: [
@@ -281,172 +219,11 @@ const initCharts = () => {
         name: '人数',
         type: 'bar',
         barWidth: '60%',
-        data: [
-          { value: 320, itemStyle: { color: '#91cc75' } },
-          { value: 650, itemStyle: { color: '#5470c6' } },
-          { value: 720, itemStyle: { color: '#fac858' } },
-          { value: 420, itemStyle: { color: '#ee6666' } },
-          { value: 180, itemStyle: { color: '#73c0de' } },
-          { value: 90, itemStyle: { color: '#3ba272' } }
-        ]
-      }
-    ]
-  })
-
-  // 初始化专业类别分布图表
-  majorChart = echarts.init(majorChartRef.value)
-  majorChart.setOption({
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left',
-      data: ['理工类', '文史类', '体育类', '艺术类']
-    },
-    series: [
-      {
-        name: '专业类别',
-        type: 'pie',
-        radius: '60%',
-        center: ['55%', '50%'],
-        data: [
-          { value: 1420, name: '理工类' },
-          { value: 680, name: '文史类' },
-          { value: 125, name: '体育类' },
-          { value: 155, name: '艺术类' }
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    ]
-  })
-
-  // 初始化学院就业率对比图表
-  collegeChart = echarts.init(collegeChartRef.value)
-  collegeChart.setOption({
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
-    },
-    legend: {
-      data: ['总人数', '就业人数', '就业率']
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: [
-      {
-        type: 'category',
-        data: ['计算机学院', '经济学院', '理学院', '文学院', '工学院', '艺术学院', '体育学院', '医学院']
-      }
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        name: '人数',
-        position: 'left'
-      },
-      {
-        type: 'value',
-        name: '就业率(%)',
-        position: 'right',
-        min: 70,
-        max: 100
-      }
-    ],
-    series: [
-      {
-        name: '总人数',
-        type: 'bar',
-        stack: 'total',
-        barWidth: 30,
-        emphasis: {
-          focus: 'series'
-        },
-        data: [420, 360, 320, 310, 280, 180, 150, 130]
-      },
-      {
-        name: '就业人数',
-        type: 'bar',
-        stack: 'total',
-        barWidth: 30,
-        emphasis: {
-          focus: 'series'
-        },
-        data: [410, 330, 290, 280, 250, 150, 130, 120]
-      },
-      {
-        name: '就业率',
-        type: 'line',
-        yAxisIndex: 1,
-        data: [97.6, 91.7, 90.6, 90.3, 89.3, 83.3, 86.7, 92.3],
+        data: [],
         label: {
           show: true,
-          formatter: '{c}%'
-        }
-      }
-    ]
-  })
-
-  // 初始化月度就业趋势图表
-  trendChart = echarts.init(trendChartRef.value)
-  trendChart.setOption({
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['就业人数']
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [
-      {
-        name: '就业人数',
-        type: 'line',
-        stack: 'Total',
-        smooth: true,
-        lineStyle: {
-          width: 3,
-          shadowColor: 'rgba(0,0,0,0.3)',
-          shadowBlur: 10,
-          shadowOffsetY: 8
-        },
-        data: [180, 120, 130, 110, 100, 320, 580, 420, 190, 95, 80, 55],
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            {
-              offset: 0,
-              color: 'rgba(80, 141, 255, 0.8)'
-            },
-            {
-              offset: 1,
-              color: 'rgba(80, 141, 255, 0.1)'
-            }
-          ])
+          position: 'top',
+          formatter: '{c}人'
         }
       }
     ]
@@ -454,41 +231,100 @@ const initCharts = () => {
 }
 
 // 获取数据并更新图表
-const fetchAndUpdateData = () => {
-  // 这里应该调用API根据选择的年份获取数据
-  // 模拟不同年份的数据
-  if (yearFilter.value === '2022') {
-    summaryData.value = [
-      { label: '毕业生总数', value: '2,450人', trend: -2.5 },
-      { label: '就业人数', value: '2,210人', trend: -3.8 },
-      { label: '就业率', value: '90.2%', trend: -1.2 },
-      { label: '平均薪资', value: '7,850元', trend: 4.2 }
-    ]
-  } else if (yearFilter.value === '2021') {
-    summaryData.value = [
-      { label: '毕业生总数', value: '2,280人', trend: 1.8 },
-      { label: '就业人数', value: '2,050人', trend: 2.1 },
-      { label: '就业率', value: '89.9%', trend: 0.5 },
-      { label: '平均薪资', value: '7,530元', trend: 3.0 }
-    ]
-  } else if (yearFilter.value === '2020') {
-    summaryData.value = [
-      { label: '毕业生总数', value: '2,120人', trend: -5.2 },
-      { label: '就业人数', value: '1,870人', trend: -8.7 },
-      { label: '就业率', value: '88.2%', trend: -3.5 },
-      { label: '平均薪资', value: '7,310元', trend: -1.8 }
-    ]
-  } else {
-    summaryData.value = [
-      { label: '毕业生总数', value: '2,568人', trend: 4.8 },
-      { label: '就业人数', value: '2,380人', trend: 7.7 },
-      { label: '就业率', value: '92.7%', trend: 2.8 },
-      { label: '平均薪资', value: '8,450元', trend: 7.6 }
-    ]
+const fetchAndUpdateData = async () => {
+  if (!yearFilter.value || !/^\d{4}$/.test(yearFilter.value)) {
+    ElMessage.warning('请输入正确的年份格式（如：2023）')
+    return
   }
 
-  // 更新其他图表数据...
-  // 此处仅是示例，实际需要根据API返回数据更新各个图表
+  try {
+    // 获取企业性质分布数据
+    const companyNatureResponse = await getCompanyNatureStats(yearFilter.value)
+    const salaryResponse = await getSalaryStats(yearFilter.value)
+    const regionResponse = await getRegionStats(yearFilter.value)
+
+    // 更新企业性质分布图表
+    if (companyNatureResponse.data && Array.isArray(companyNatureResponse.data)) {
+      const companyData = companyNatureResponse.data.map(item => ({
+        name: item.name,
+        value: item.value || 0
+      }))
+      companyChart.setOption({
+        series: [{
+          data: companyData
+        }]
+      })
+    }
+
+    // 更新薪资分布图表
+    if (salaryResponse.data && Array.isArray(salaryResponse.data)) {
+      const salaryData = salaryResponse.data.map(item => ({
+        name: item.name,
+        value: item.value || 0
+      }))
+      salaryChart.setOption({
+        series: [{
+          data: salaryData
+        }]
+      })
+    }
+
+    // 更新地区分布图表
+    if (regionResponse.data && Array.isArray(regionResponse.data)) {
+      const regionData = regionResponse.data.map(item => ({
+        name: item.name,
+        value: item.value || 0
+      }))
+      regionChart.setOption({
+        series: [{
+          data: regionData
+        }]
+      })
+    }
+
+    // 更新概览数据
+    updateSummaryData(
+      companyNatureResponse.data,
+      salaryResponse.data,
+      regionResponse.data
+    )
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+    ElMessage.error(error.response?.data?.message || '获取统计数据失败，请稍后重试')
+  }
+}
+
+// 更新概览数据
+const updateSummaryData = (companyNatureData, salaryData, regionData) => {
+  if (!companyNatureData || !salaryData || !regionData) {
+    return
+  }
+
+  // 计算总就业人数
+  const totalEmployed = companyNatureData.reduce((sum, item) => sum + (item.value || 0), 0)
+  
+  // 计算总薪资
+  const totalSalary = salaryData.reduce((sum, item) => sum + (item.value || 0), 0)
+  
+  // 计算平均薪资
+  const avgSalary = totalEmployed > 0 ? Math.round(totalSalary / totalEmployed) : 0
+  
+  // 计算就业率（假设毕业生总数是就业人数的1.2倍，这个比例可以根据实际情况调整）
+  const totalGraduates = Math.round(totalEmployed * 1.2)
+  const employmentRate = totalGraduates > 0 ? Math.round((totalEmployed / totalGraduates) * 100) : 0
+  
+  summaryData.value = [
+    { label: '毕业生总数', value: `${totalGraduates}人`, trend: 0 },
+    { label: '就业人数', value: `${totalEmployed}人`, trend: 0 },
+    { label: '就业率', value: `${employmentRate}%`, trend: 0 },
+    { label: '平均薪资', value: `${avgSalary}元`, trend: 0 }
+  ]
+}
+
+// 生成随机颜色
+const getRandomColor = () => {
+  const colors = ['#91cc75', '#5470c6', '#fac858', '#ee6666', '#73c0de', '#3ba272']
+  return colors[Math.floor(Math.random() * colors.length)]
 }
 
 // 窗口大小变化时调整图表
@@ -496,9 +332,6 @@ const handleResize = () => {
   regionChart && regionChart.resize()
   companyChart && companyChart.resize()
   salaryChart && salaryChart.resize()
-  majorChart && majorChart.resize()
-  collegeChart && collegeChart.resize()
-  trendChart && trendChart.resize()
 }
 
 onMounted(() => {

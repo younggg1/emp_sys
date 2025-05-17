@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.StatisticsMapper">
+
+    <!-- 企业性质分布统计 -->
+    <select id="getCompanyNatureStats" resultType="java.util.HashMap">
+        SELECT 
+            company_nature as name,
+            COUNT(*) as value
+        FROM employment_records
+        WHERE status = 'approved'
+        <if test="year != null and year != ''">
+            AND YEAR(entry_date) = #{year}
+        </if>
+        GROUP BY company_nature
+    </select>
+
+    <!-- 薪资分布统计 -->
+    <select id="getSalaryStats" resultType="java.util.HashMap">
+        SELECT 
+            CASE 
+                WHEN salary &lt; 5000 THEN '5000以下'
+                WHEN salary BETWEEN 5000 AND 8000 THEN '5000-8000'
+                WHEN salary BETWEEN 8000 AND 12000 THEN '8000-12000'
+                ELSE '12000以上'
+            END as name,
+            COUNT(*) as value
+        FROM employment_records
+        WHERE status = 'approved'
+        <if test="year != null and year != ''">
+            AND YEAR(entry_date) = #{year}
+        </if>
+        GROUP BY name
+    </select>
+
+    <!-- 地区分布统计 -->
+    <select id="getRegionStats" resultType="java.util.HashMap">
+        SELECT 
+            region as name,
+            COUNT(*) as value
+        FROM employment_records
+        WHERE status = 'approved'
+        <if test="year != null and year != ''">
+            AND YEAR(entry_date) = #{year}
+        </if>
+        GROUP BY region
+    </select>
+
+</mapper> 

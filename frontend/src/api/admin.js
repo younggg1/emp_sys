@@ -307,4 +307,31 @@ export function mockGetHistoryData() {
       method: 'get'
     })
   }
+}
+
+// 获取企业性质分布统计
+export function getCompanyNatureStats(year) {
+  return request({
+    url: '/api/admin/statistics/company-nature',
+    method: 'get',
+    params: { year }
+  })
+}
+
+// 获取薪资分布统计
+export function getSalaryStats(year) {
+  return request({
+    url: '/api/admin/statistics/salary',
+    method: 'get',
+    params: { year }
+  })
+}
+
+// 获取地区分布统计
+export function getRegionStats(year) {
+  return request({
+    url: '/api/admin/statistics/region',
+    method: 'get',
+    params: { year }
+  })
 } 

@@ -108,7 +108,7 @@
         WHERE record_id = #{recordId}
     </delete>
     
-    <!-- 获取辅导员负责的学生就业信息列表 -->
+    <!-- 获取辅导员负责的学生就业信息列表 BaseResultMap EmploymentDetailMap-->
     <select id="selectEmploymentRecordsByCounselorId" resultMap="EmploymentDetailMap">
         SELECT 
             e.*,
