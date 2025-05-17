@@ -156,17 +156,8 @@ export function getHistoryData() {
   })
 }
 
-// 添加历年就业数据记录
-export function addHistoryRecord(data) {
-  return request({
-    url: '/api/admin/history',
-    method: 'post',
-    data
-  })
-}
-
-// 更新历年就业数据记录
-export function updateHistoryRecord(id, data) {
+// 更新历年就业数据
+export function updateHistoryData(id, data) {
   return request({
     url: `/api/admin/history/${id}`,
     method: 'put',
@@ -174,8 +165,8 @@ export function updateHistoryRecord(id, data) {
   })
 }
 
-// 删除历年就业数据记录
-export function deleteHistoryRecord(id) {
+// 删除历年就业数据
+export function deleteHistoryData(id) {
   return request({
     url: `/api/admin/history/${id}`,
     method: 'delete'
