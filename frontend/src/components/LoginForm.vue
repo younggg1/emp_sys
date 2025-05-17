@@ -30,8 +30,12 @@
       </el-form-item>
       
       <el-form-item>
-        <el-button type="primary" :loading="loading" @click="handleLogin">登录</el-button>
+        <el-button type="primary" :loading="loading" @click="handleLogin" style="width: 100%; height: 45px; font-size: 16px;">登录</el-button>
       </el-form-item>
+      
+      <div class="forgot-password">
+        <span>忘记密码请联系学校管理员重置</span>
+      </div>
     </el-form>
   </div>
 </template>
@@ -178,5 +182,30 @@ onMounted(() => {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.forgot-password {
+  text-align: center;
+  margin-top: 15px;
+  color: #909399;
+  font-size: 14px;
+}
+
+:deep(.el-form-item__content) {
+  display: flex;
+  align-items: center;
+}
+
+:deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #dcdfe6 inset;
+}
+
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #409eff inset;
+}
+
+:deep(.el-radio-group) {
+  display: flex;
+  gap: 20px;
 }
 </style> 
