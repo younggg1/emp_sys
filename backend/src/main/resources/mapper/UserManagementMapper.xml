@@ -79,5 +79,19 @@
             </if>
         </where>
     </select>
-    
+
+<!--    添加辅导员-->
+    <insert id="insertCounselor" parameterType="com.empsys.backend.entity.Counselors">
+        INSERT INTO counselors (
+            counselor_id,
+            name,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{counselor_id},
+                     #{name},
+                     NOW(),
+                     NOW()
+                 )
+    </insert>
 </mapper> 

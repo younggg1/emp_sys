@@ -1,12 +1,15 @@
 package com.empsys.backend.service.impl;
-
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.empsys.backend.entity.Counselors;
 import com.empsys.backend.entity.Users;
 import com.empsys.backend.mapper.UserManagementMapper;
 import com.empsys.backend.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -49,5 +52,39 @@ public class UserManagementServiceImpl implements UserManagementService {
         return page;
     }
 
+
+
+    @Override
+    @Transactional
+    public boolean addCounselor(Users user, String name) {
+        // 1. 检查用户名是否已存在
+        LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Users::getUsername, user.getUsername());
+        if (userManagementMapper.selectCount(queryWrapper) > 0) {
+            throw new RuntimeException("用户名已存在");
+        }
+
+        // 2. 设置用户角色为辅导员
+        user.setRole("counselor");
+
+        // 3. 保存用户信息
+        boolean userSaved = userManagementMapper.insert(user) > 0;
+        if (!userSaved) {
+            throw new RuntimeException("保存用户信息失败");
+        }
+
+        // 4. 创建辅导员信息
+        Counselors counselor = new Counselors();
+        counselor.setCounselor_id(user.getUser_id());
+        counselor.setName(name);
+
+        // 5. 保存辅导员信息
+        boolean counselorSaved = userManagementMapper.insertCounselor(counselor) > 0;
+        if (!counselorSaved) {
+            throw new RuntimeException("保存辅导员信息失败");
+        }
+
+        return true;
+    }
 
 } 

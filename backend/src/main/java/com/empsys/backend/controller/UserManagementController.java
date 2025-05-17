@@ -46,4 +46,14 @@ public class UserManagementController {
     }
 
 
+    @PostMapping("/counselor")
+    public Result<Boolean> addCounselor(@RequestBody Users user, @RequestParam String name) {
+        try {
+            boolean success = userManagementService.addCounselor(user, name);
+            return Result.success(success);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
 } 

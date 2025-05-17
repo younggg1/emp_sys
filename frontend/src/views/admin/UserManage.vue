@@ -164,7 +164,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList } from '@/api/admin'
+import { getUserList, addCounselor } from '@/api/admin'
 
 // 筛选表单
 const filterForm = reactive({
@@ -213,11 +213,11 @@ const counselorList = ref([])
 const studentRules = {
   username: [
     { required: true, message: '请输入学号', trigger: 'blur' },
-    { min: 5, max: 20, message: '长度在 5 到 20 个字符', trigger: 'blur' }
+   
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+ 
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' }
@@ -239,18 +239,18 @@ const studentRules = {
 const counselorRules = {
   username: [
     { required: true, message: '请输入工号', trigger: 'blur' },
-    { min: 5, max: 20, message: '长度在 5 到 20 个字符', trigger: 'blur' }
+    
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+   
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' }
   ]
 }
 
-// 模拟数据加载
+
 onMounted(() => {
   fetchUserList()
   fetchCounselorList()
@@ -356,16 +356,30 @@ const submitAddStudent = () => {
 
 // 提交添加辅导员
 const submitAddCounselor = () => {
-  counselorFormRef.value.validate((valid) => {
+  counselorFormRef.value.validate(async (valid) => {
     if (valid) {
       submitLoading.value = true
-      // 这里应该是调用API添加辅导员
-      setTimeout(() => {
-        ElMessage.success('添加辅导员成功')
-        addCounselorDialogVisible.value = false
+      try {
+        const res = await addCounselor({
+          username: counselorForm.username,
+          password: counselorForm.password,
+          name: counselorForm.name
+        })
+        
+        if (res.code === 200) {
+          ElMessage.success('添加辅导员成功')
+          addCounselorDialogVisible.value = false
+          fetchUserList()
+          fetchCounselorList()
+        } else {
+          ElMessage.error(res.msg || '添加辅导员失败')
+        }
+      } catch (error) {
+        console.error('添加辅导员失败:', error)
+        ElMessage.error('添加辅导员失败')
+      } finally {
         submitLoading.value = false
-        fetchUserList()
-      }, 500)
+      }
     }
   })
 }

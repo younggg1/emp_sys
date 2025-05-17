@@ -17,4 +17,13 @@ public interface UserManagementService {
      * @return 用户列表
      */
     IPage<Users> getUserList(Page<Users> page, String role, String keyword);
+
+
+    /**
+     * 添加辅导员
+     * @param user 用户信息
+     * @param name 咨询师名称
+     * @return 是否添加成功
+     */
+    boolean addCounselor(Users user, String name);
 } 

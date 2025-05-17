@@ -173,14 +173,7 @@ export function deleteHistoryData(id) {
   })
 }
 
-// 导出历年就业数据
-export function exportHistoryData() {
-  return request({
-    url: '/api/admin/history/export',
-    method: 'get',
-    responseType: 'blob'
-  })
-}
+
 
 // 获取用户列表
 export function getUserList(params) {
@@ -280,25 +273,7 @@ export const updateSettings = async (requireCaptcha, requireApproval) => {
   }
 }
 
-// 模拟接口 - 获取历年就业数据
-export function mockGetHistoryData() {
-  // 根据环境变量配置决定是否使用模拟数据
-  if (USE_MOCK) {
-    return mockRequest([
-      { id: 1, year: 2023, total_students: 1200, employed_students: 1080, employment_rate: 90, avg_salary: 8500 },
-      { id: 2, year: 2022, total_students: 1150, employed_students: 1012, employment_rate: 88, avg_salary: 8200 },
-      { id: 3, year: 2021, total_students: 1100, employed_students: 968, employment_rate: 88, avg_salary: 7800 },
-      { id: 4, year: 2020, total_students: 1050, employed_students: 924, employment_rate: 88, avg_salary: 7500 },
-      { id: 5, year: 2019, total_students: 1000, employed_students: 920, employment_rate: 92, avg_salary: 7200 },
-    ])
-  } else {
-    // 不使用模拟数据时，调用真实API
-    return request({
-      url: '/api/admin/history',
-      method: 'get'
-    })
-  }
-}
+
 
 // 获取企业性质分布统计
 export function getCompanyNatureStats(year) {
@@ -326,3 +301,18 @@ export function getRegionStats(year) {
     params: { year }
   })
 } 
+
+// 添加辅导员
+export function addCounselor(data) {
+  return request({
+    url: '/api/admin/counselor',
+    method: 'post',
+    data: {
+      username: data.username,
+      password: data.password
+    },
+    params: {
+      name: data.name
+    }
+  })
+}

@@ -1,6 +1,7 @@
 package com.empsys.backend.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.empsys.backend.entity.Counselors;
 import com.empsys.backend.entity.Users;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -33,4 +34,11 @@ public interface UserManagementMapper extends BaseMapper<Users> {
      */
     long selectUserCount(@Param("role") String role,
                         @Param("keyword") String keyword);
+
+    /**
+     * 添加辅导员
+     * @param counselor 辅导员
+     * @return 添加结果
+     */
+    int insertCounselor(Counselors counselor);
 } 
