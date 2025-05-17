@@ -203,23 +203,7 @@ export function updateSystemSettings(data) {
   })
 }
 
-// 分配权限
-export const assignPermission = async (userId, canEdit, canDelete) => {
-  try {
-    const response = await request({
-      url: '/admin/permission/assign',
-      method: 'post',
-      data: {
-        user_id: userId,
-        can_edit: canEdit,
-        can_delete: canDelete
-      }
-    })
-    return response.data
-  } catch (error) {
-    throw error.response?.data || { message: '分配权限失败' }
-  }
-}
+
 
 // 更新系统设置
 export const updateSettings = async (requireCaptcha, requireApproval) => {
@@ -296,5 +280,22 @@ export function addStudent(data) {
     url: '/api/admin/addStudent',
     method: 'post',
     data
+  })
+}
+
+// 更新辅导员权限
+export function updatePermission(userId, data) {
+  return request({
+    url: `/api/counselor/updatePermission/${userId}?permission=${data.permission}`,
+    method: 'put'
+  })
+}
+
+
+// 获取辅导员完整信息列表
+export function getCounselorListWithUserInfo() {
+  return request({
+    url: '/api/counselor/listWithUserInfo',
+    method: 'get'
   })
 }

@@ -41,8 +41,6 @@ public class CounselorController {
     @Autowired
     private EmploymentRecordsService employmentRecordsService;
 
-
-
     /**
      * 获取辅导员负责班级的学生列表
      * @param counselorId 辅导员ID
@@ -194,8 +192,6 @@ public class CounselorController {
         }
     }
     
-
-    
     /**
      * 辅导员删除就业信息
      * @param recordId 就业信息ID
@@ -216,5 +212,49 @@ public class CounselorController {
         } else {
             return Result.error("就业信息删除失败，记录不存在或无权限操作");
         }
+    }
+
+
+    /**
+     * 更新辅导员权限
+     * @param counselor_id 辅导员ID
+     * @param permission 权限值（Y-可删除，N-不可删除）
+     * @return 更新结果
+     */
+    @PutMapping("/updatePermission/{counselor_id}")
+    public Result<Boolean> updatePermission(
+            @PathVariable Long counselor_id,
+            @RequestParam String permission) {
+        logger.info("更新辅导员权限，辅导员ID：{}，权限值：{}", counselor_id, permission);
+        
+        if (!permission.equals("Y") && !permission.equals("N")) {
+            logger.error("无效的权限值：{}", permission);
+            return Result.error("权限值无效，只能是Y或N");
+        }
+        
+        try {
+            boolean success = counselorsService.updatePermission(counselor_id, permission);
+            if (success) {
+                logger.info("权限更新成功");
+                return Result.success(true);
+            } else {
+                logger.error("权限更新失败，可能是辅导员不存在");
+                return Result.error("权限更新失败，辅导员不存在");
+            }
+        } catch (Exception e) {
+            logger.error("权限更新时发生异常", e);
+            return Result.error("权限更新失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取辅导员完整信息列表（包含工号）
+     * @return 辅导员列表
+     */
+    @GetMapping("/listWithUserInfo")
+    public Result<List<Map<String, Object>>> getCounselorListWithUserInfo() {
+        logger.info("获取辅导员完整信息列表");
+        List<Map<String, Object>> counselors = counselorsService.getCounselorListWithUserInfo();
+        return Result.success(counselors);
     }
 } 

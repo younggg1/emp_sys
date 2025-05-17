@@ -7,14 +7,36 @@
     <resultMap id="BaseResultMap" type="com.empsys.backend.entity.Counselors">
             <id property="counselor_id" column="counselor_id" jdbcType="BIGINT"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="permission" column="permission" jdbcType="VARCHAR"/>
             <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
             <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        counselor_id,name,created_at,
+        counselor_id,name,permission,created_at,
         updated_at
     </sql>
     
+    <select id="getAllCounselors" resultType="com.empsys.backend.entity.Counselors">
+        SELECT * FROM counselors
+    </select>
+
+    <select id="getCounselorListWithUserInfo" resultType="java.util.Map">
+        SELECT 
+            c.counselor_id,
+            c.name,
+            u.username,
+            c.permission
+        FROM counselors c
+        LEFT JOIN users u ON c.counselor_id = u.user_id
+    </select>
+
+    <!-- 更新辅导员权限 -->
+    <update id="updatePermission">
+        UPDATE counselors 
+        SET permission = #{permission},
+            updated_at = #{updated_at}
+        WHERE counselor_id = #{counselor_id}
+    </update>
 
 </mapper>

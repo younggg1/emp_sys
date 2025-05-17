@@ -85,6 +85,16 @@ const router = createRouter({
           path: 'settings',
           name: 'adminSettings',
           component: () => import('../views/admin/Settings.vue')
+        },
+        {
+          path: 'permission-manage',
+          name: 'PermissionManage',
+          component: () => import('@/views/admin/PermissionManage.vue'),
+          meta: {
+            title: '权限管理',
+            requiresAuth: true,
+            roles: ['admin']
+          }
         }
       ]
     }

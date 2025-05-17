@@ -12,9 +12,21 @@ import java.util.Map;
 */
 public interface CounselorsService extends IService<Counselors> {
 
+    List<Counselors> getAllCounselors();
 
-    
+    /**
+     * 更新辅导员权限
+     * @param counselor_id 辅导员ID
+     * @param permission 权限值（Y-可删除，N-不可删除）
+     * @return 是否更新成功
+     */
+    boolean updatePermission(Long counselor_id, String permission);
 
-    
 
+
+    /**
+     * 获取辅导员完整信息列表（包含工号）
+     * @return 辅导员列表
+     */
+    List<Map<String, Object>> getCounselorListWithUserInfo();
 }
