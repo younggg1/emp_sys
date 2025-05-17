@@ -185,7 +185,7 @@ export function exportHistoryData() {
 // 获取用户列表
 export function getUserList(params) {
   return request({
-    url: '/api/admin/users',
+    url: '/api/admin/getUsersList',
     method: 'get',
     params
   })

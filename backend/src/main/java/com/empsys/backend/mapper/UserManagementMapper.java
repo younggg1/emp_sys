@@ -1,0 +1,36 @@
+package com.empsys.backend.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.empsys.backend.entity.Users;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import java.util.List;
+
+/**
+ * 用户管理数据访问层
+ */
+@Mapper
+public interface UserManagementMapper extends BaseMapper<Users> {
+    
+    /**
+     * 获取用户列表
+     * @param offset 偏移量
+     * @param size 每页大小
+     * @param role 角色
+     * @param keyword 关键词
+     * @return 用户列表
+     */
+    List<Users> selectUserList(@Param("offset") long offset, 
+                             @Param("size") long size,
+                             @Param("role") String role,
+                             @Param("keyword") String keyword);
+    
+    /**
+     * 获取用户总数
+     * @param role 角色
+     * @param keyword 关键词
+     * @return 用户总数
+     */
+    long selectUserCount(@Param("role") String role,
+                        @Param("keyword") String keyword);
+} 

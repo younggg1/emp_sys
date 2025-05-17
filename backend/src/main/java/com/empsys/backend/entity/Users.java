@@ -50,6 +50,21 @@ public class Users {
     @TableField(value = "updated_at")
     private Date updated_at;
 
+    /**
+     * 显示字段，不映射到数据库
+     */
+    @TableField(exist = false)
+    private String display_name;
+
+    @TableField(exist = false)
+    private String display_class_name;
+
+    @TableField(exist = false)
+    private String display_college;
+
+    @TableField(exist = false)
+    private String display_major;
+
     @Override
     public boolean equals(Object that) {
         if (this == that) {

@@ -3,7 +3,7 @@
     <el-card class="filter-card">
       <el-form :inline="true" :model="filterForm" class="filter-form">
         <el-form-item label="角色">
-          <el-select v-model="filterForm.role" placeholder="请选择角色" clearable>
+          <el-select v-model="filterForm.role" placeholder="请选择角色" clearable style="width: 200px">
             <el-option label="学生" value="student"></el-option>
             <el-option label="辅导员" value="counselor"></el-option>
           </el-select>
@@ -29,38 +29,58 @@
 
       <el-table :data="userList" border style="width: 100%" v-loading="loading">
         <el-table-column type="index" width="50" label="序号"></el-table-column>
-        <el-table-column prop="username" label="用户名"></el-table-column>
-        <el-table-column prop="name" label="姓名"></el-table-column>
+        <el-table-column prop="username" label="学号/工号"></el-table-column>
+        <el-table-column prop="display_name" label="姓名"></el-table-column>
         <el-table-column prop="role" label="角色">
           <template #default="scope">
-            <el-tag :type="scope.row.role === 'student' ? 'primary' : 'success'">
-              {{ scope.row.role === 'student' ? '学生' : '辅导员' }}
+            <el-tag :type="getRoleType(scope.row.role)">
+              {{ getRoleName(scope.row.role) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="classInfo" label="班级信息" show-overflow-tooltip>
+        <el-table-column prop="display_class_name" label="班级信息" show-overflow-tooltip>
           <template #default="scope">
-            <span v-if="scope.row.role === 'student'">{{ scope.row.classInfo }}</span>
+            <span v-if="scope.row.role === 'student'">{{ scope.row.display_class_name }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="college" label="学院" show-overflow-tooltip>
+        <el-table-column prop="display_college" label="学院" show-overflow-tooltip>
           <template #default="scope">
-            <span v-if="scope.row.role === 'student'">{{ scope.row.college }}</span>
+            <span v-if="scope.row.role === 'student'">{{ scope.row.display_college }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="major" label="专业" show-overflow-tooltip>
+        <el-table-column prop="display_major" label="专业" show-overflow-tooltip>
           <template #default="scope">
-            <span v-if="scope.row.role === 'student'">{{ scope.row.major }}</span>
+            <span v-if="scope.row.role === 'student'">{{ scope.row.display_major }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间"></el-table-column>
-        <el-table-column label="操作" width="220">
+        <el-table-column prop="created_at" label="创建时间">
           <template #default="scope">
-            <el-button type="primary" link @click="resetPassword(scope.row)">重置密码</el-button>
-            <el-button type="danger" link @click="handleDelete(scope.row)">删除</el-button>
+            {{ formatDate(scope.row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="280">
+          <template #default="scope">
+            <el-button 
+              type="primary" 
+              link 
+              @click="handleEdit(scope.row)"
+              :disabled="scope.row.role === 'admin'"
+            >编辑</el-button>
+            <el-button 
+              type="primary" 
+              link 
+              @click="resetPassword(scope.row)"
+              :disabled="scope.row.role === 'admin'"
+            >重置密码</el-button>
+            <el-button 
+              type="danger" 
+              link 
+              @click="handleDelete(scope.row)"
+              :disabled="scope.row.role === 'admin'"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -142,8 +162,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getUserList } from '@/api/admin'
 
 // 筛选表单
 const filterForm = reactive({
@@ -236,42 +257,30 @@ onMounted(() => {
 })
 
 // 获取用户列表
-const fetchUserList = () => {
+const fetchUserList = async () => {
   loading.value = true
-  // 这里应该是从API获取数据
-  setTimeout(() => {
-    userList.value = [
-      {
-        id: 1,
-        username: '20210001',
-        name: '张三',
-        role: 'student',
-        classInfo: '计算机2021级1班',
-        college: '计算机学院',
-        major: '计算机科学与技术',
-        createdAt: '2023-01-01'
-      },
-      {
-        id: 2,
-        username: '20210002',
-        name: '李四',
-        role: 'student',
-        classInfo: '计算机2021级2班',
-        college: '计算机学院',
-        major: '软件工程',
-        createdAt: '2023-01-02'
-      },
-      {
-        id: 3,
-        username: 'teacher001',
-        name: '王老师',
-        role: 'counselor',
-        createdAt: '2023-01-03'
-      }
-    ]
-    total.value = 3
+  try {
+    const res = await getUserList({
+      page: currentPage.value,
+      size: pageSize.value,
+      role: filterForm.role,
+      keyword: filterForm.keyword
+    })
+    if (res.code === 200 && res.data) {
+      console.log('用户列表数据:', res.data.records)
+      userList.value = res.data.records
+      total.value = res.data.total
+    } else {
+      userList.value = []
+      total.value = 0
+      ElMessage.error(res.msg || '获取用户列表失败')
+    }
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+    ElMessage.error('获取用户列表失败')
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 // 获取辅导员列表
@@ -293,8 +302,14 @@ const handleSearch = () => {
 const resetFilter = () => {
   filterForm.role = ''
   filterForm.keyword = ''
-  handleSearch()
+  currentPage.value = 1
+  fetchUserList()
 }
+
+// 监听筛选条件变化
+watch([() => filterForm.role, () => filterForm.keyword], () => {
+  handleSearch()
+})
 
 // 分页处理
 const handleSizeChange = (size) => {
@@ -355,8 +370,21 @@ const submitAddCounselor = () => {
   })
 }
 
+// 编辑用户
+const handleEdit = (row) => {
+  if (row.role === 'admin') {
+    ElMessage.warning('不能编辑管理员账号')
+    return
+  }
+  // 编辑逻辑
+}
+
 // 重置密码
 const resetPassword = (row) => {
+  if (row.role === 'admin') {
+    ElMessage.warning('不能重置管理员密码')
+    return
+  }
   ElMessageBox.confirm(`确定要重置用户"${row.name}"的密码吗?`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
@@ -369,6 +397,10 @@ const resetPassword = (row) => {
 
 // 删除用户
 const handleDelete = (row) => {
+  if (row.role === 'admin') {
+    ElMessage.warning('不能删除管理员账号')
+    return
+  }
   ElMessageBox.confirm(`确定要删除用户"${row.name}"吗?`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
@@ -378,6 +410,48 @@ const handleDelete = (row) => {
     ElMessage.success('删除成功')
     fetchUserList()
   }).catch(() => {})
+}
+
+// 获取角色类型
+const getRoleType = (role) => {
+  switch (role) {
+    case 'student':
+      return 'primary'
+    case 'counselor':
+      return 'success'
+    case 'admin':
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+// 获取角色名称
+const getRoleName = (role) => {
+  switch (role) {
+    case 'student':
+      return '学生'
+    case 'counselor':
+      return '辅导员'
+    case 'admin':
+      return '管理员'
+    default:
+      return role
+  }
+}
+
+// 格式化日期
+const formatDate = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  return d.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 </script>
 

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.empsys.backend.mapper.UserManagementMapper">
+    
+    <resultMap id="UserResultMap" type="com.empsys.backend.entity.Users">
+        <id property="user_id" column="user_id" jdbcType="BIGINT"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+        <result property="created_at" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updated_at" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="display_name" column="display_name" jdbcType="VARCHAR"/>
+        <result property="display_class_name" column="display_class_name" jdbcType="VARCHAR"/>
+        <result property="display_college" column="display_college" jdbcType="VARCHAR"/>
+        <result property="display_major" column="display_major" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    <!-- 获取用户列表 -->
+    <select id="selectUserList" resultMap="UserResultMap">
+        SELECT 
+            u.user_id,
+            u.username,
+            u.password,
+            u.role,
+            u.created_at,
+            u.updated_at,
+            CASE 
+                WHEN u.role = 'student' THEN s.name
+                WHEN u.role = 'counselor' THEN c.name
+                ELSE NULL
+            END as display_name,
+            CASE 
+                WHEN u.role = 'student' THEN s.class_name
+                ELSE NULL
+            END as display_class_name,
+            CASE 
+                WHEN u.role = 'student' THEN s.college
+                ELSE NULL
+            END as display_college,
+            CASE 
+                WHEN u.role = 'student' THEN s.major
+                ELSE NULL
+            END as display_major
+        FROM users u
+        LEFT JOIN students s ON u.user_id = s.student_id
+        LEFT JOIN counselors c ON u.user_id = c.counselor_id
+        <where>
+            <if test="role != null and role != ''">
+                AND u.role = #{role}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    u.username LIKE CONCAT('%', #{keyword}, '%')
+                    OR s.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY u.user_id ASC
+        LIMIT #{offset}, #{size}
+    </select>
+    
+    <!-- 获取用户总数 -->
+    <select id="selectUserCount" resultType="long">
+        SELECT COUNT(*) 
+        FROM users u
+        LEFT JOIN students s ON u.user_id = s.student_id
+        LEFT JOIN counselors c ON u.user_id = c.counselor_id
+        <where>
+            <if test="role != null and role != ''">
+                AND u.role = #{role}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    u.username LIKE CONCAT('%', #{keyword}, '%')
+                    OR s.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+    
+</mapper> 
