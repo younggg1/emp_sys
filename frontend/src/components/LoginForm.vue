@@ -33,9 +33,9 @@
         <el-button type="primary" :loading="loading" @click="handleLogin" style="width: 100%; height: 45px; font-size: 16px;">登录</el-button>
       </el-form-item>
       
-      <div class="forgot-password">
+      <!-- <div class="forgot-password">
         <span>忘记密码请联系学校管理员重置</span>
-      </div>
+      </div> -->
     </el-form>
   </div>
 </template>

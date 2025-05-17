@@ -56,4 +56,27 @@ public class UserManagementController {
         }
     }
 
+    /**
+     * 获取辅导员列表
+     */
+    @GetMapping("/getCounselors")
+    public Result<List<Map<String, Object>>> getCounselorList() {
+        logger.info("获取辅导员列表");
+        List<Map<String, Object>> counselors = userManagementService.getCounselorList();
+        return Result.success(counselors);
+    }
+
+    /**
+     * 添加学生
+     */
+    @PostMapping("/addStudent")
+    public Result<Boolean> addStudent(@RequestBody Map<String, Object> studentData) {
+        try {
+            boolean success = userManagementService.addStudent(studentData);
+            return Result.success(success);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
 } 

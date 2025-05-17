@@ -60,4 +60,33 @@
         ORDER BY
             s.grade, s.class_name, s.name
     </select>
+
+
+
+    <!-- 添加学生 -->
+    <insert id="insertStudent" parameterType="com.empsys.backend.entity.Students">
+        INSERT INTO students (
+            student_id,
+            name,
+            grade,
+            class_name,
+            college,
+            major,
+            counselor_id,
+            employment_status,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{student_id},
+                     #{name},
+                     #{grade},
+                     #{class_name},
+                     #{college},
+                     #{major},
+                     #{counselor_id},
+                     #{employment_status},
+                     NOW(),
+                     NOW()
+                 )
+    </insert>
 </mapper>

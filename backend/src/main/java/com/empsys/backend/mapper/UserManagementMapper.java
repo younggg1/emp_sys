@@ -6,6 +6,7 @@ import com.empsys.backend.entity.Users;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户管理数据访问层
@@ -41,4 +42,10 @@ public interface UserManagementMapper extends BaseMapper<Users> {
      * @return 添加结果
      */
     int insertCounselor(Counselors counselor);
+
+    /**
+     * 获取辅导员列表
+     * @return 辅导员列表
+     */
+    List<Map<String, Object>> selectCounselorList();
 } 

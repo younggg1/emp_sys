@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.empsys.backend.entity.Users;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 用户管理服务接口
  */
@@ -26,4 +29,19 @@ public interface UserManagementService {
      * @return 是否添加成功
      */
     boolean addCounselor(Users user, String name);
+
+    /**
+     * 获取辅导员列表
+     * @return 辅导员列表
+     */
+    List<Map<String, Object>> getCounselorList();
+
+    /**
+     * 添加学生
+     * @param studentData 学生数据
+     * @return 是否添加成功
+     */
+    boolean addStudent(Map<String, Object> studentData);
+
+    
 } 

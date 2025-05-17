@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.empsys.backend.entity.Counselors;
+import com.empsys.backend.entity.Students;
 import com.empsys.backend.entity.Users;
+import com.empsys.backend.mapper.StudentsMapper;
 import com.empsys.backend.mapper.UserManagementMapper;
 import com.empsys.backend.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户管理服务实现类
@@ -22,6 +25,9 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @Autowired
     private UserManagementMapper userManagementMapper;
+
+    @Autowired
+    private StudentsMapper studentsMapper;
 
     @Override
     public IPage<Users> getUserList(Page<Users> page, String role, String keyword) {
@@ -82,6 +88,61 @@ public class UserManagementServiceImpl implements UserManagementService {
         boolean counselorSaved = userManagementMapper.insertCounselor(counselor) > 0;
         if (!counselorSaved) {
             throw new RuntimeException("保存辅导员信息失败");
+        }
+
+        return true;
+    }
+
+
+
+
+    @Override
+    public List<Map<String, Object>> getCounselorList() {
+        return userManagementMapper.selectCounselorList();
+    }
+
+    @Override
+    @Transactional
+    public boolean addStudent(Map<String, Object> studentData) {
+        // 1. 检查用户名是否已存在
+        LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Users::getUsername, studentData.get("username"));
+        if (userManagementMapper.selectCount(queryWrapper) > 0) {
+            throw new RuntimeException("用户名已存在");
+        }
+
+        // 2. 创建用户信息
+        Users user = new Users();
+        user.setUsername((String) studentData.get("username"));
+        user.setPassword((String) studentData.get("password"));
+        user.setRole("student");
+
+        // 3. 保存用户信息
+        boolean userSaved = userManagementMapper.insert(user) > 0;
+        if (!userSaved) {
+            throw new RuntimeException("保存用户信息失败");
+        }
+
+        // 4. 创建学生信息
+        Students student = new Students();
+        student.setStudent_id(user.getUser_id());
+        student.setName((String) studentData.get("name"));
+        student.setGrade((String) studentData.get("grade"));
+        student.setClass_name((String) studentData.get("className"));
+        student.setCollege((String) studentData.get("college"));
+        student.setMajor((String) studentData.get("major"));
+        // 添加空值检查
+        Object counselorId = studentData.get("counselor_id");
+        if (counselorId == null) {
+            throw new RuntimeException("辅导员ID不能为空");
+        }
+        student.setCounselor_id(Long.valueOf(studentData.get("counselor_id").toString()));
+        student.setEmployment_status("unemployed");
+
+        // 5. 保存学生信息
+        boolean studentSaved = studentsMapper.insertStudent(student) > 0;
+        if (!studentSaved) {
+            throw new RuntimeException("保存学生信息失败");
         }
 
         return true;

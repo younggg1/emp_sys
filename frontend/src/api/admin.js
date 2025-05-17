@@ -1,5 +1,4 @@
 ﻿import request, { mockRequest } from '@/utils/request'
-import { USE_MOCK } from '@/config'
 
 // 获取本校学生列表
 export function getStudents() {
@@ -23,19 +22,7 @@ export const getEmploymentRecordsAsync = async (year) => {
   }
 }
 
-// 查询本校反馈信息
-export const getFeedbackRecordsAsync = async (year) => {
-  try {
-    const response = await request({
-      url: '/admin/feedback',
-      method: 'get',
-      params: { year }
-    })
-    return response.data
-  } catch (error) {
-    throw error.response?.data || { message: '获取反馈信息失败' }
-  }
-}
+
 
 // 获取就业分布统计
 export const getDistributionStatisticsAsync = async (type, year) => {
@@ -74,22 +61,9 @@ export function getEmploymentRecords(params) {
   })
 }
 
-// 审核就业信息
-export function auditEmployment(id) {
-  return request({
-    url: `/api/admin/employment/${id}/audit`,
-    method: 'post'
-  })
-}
 
-// 编辑就业信息
-export function editEmployment(id, data) {
-  return request({
-    url: `/api/admin/employment/${id}`,
-    method: 'put',
-    data
-  })
-}
+
+
 
 // 删除就业信息
 export function deleteEmployment(id) {
@@ -314,5 +288,22 @@ export function addCounselor(data) {
     params: {
       name: data.name
     }
+  })
+}
+
+// 获取辅导员列表
+export function getCounselorList() {
+  return request({
+    url: '/api/admin/getCounselors',
+    method: 'get'
+  })
+}
+
+// 添加学生
+export function addStudent(data) {
+  return request({
+    url: '/api/admin/addStudent',
+    method: 'post',
+    data
   })
 }

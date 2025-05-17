@@ -28,6 +28,14 @@ public interface StudentsMapper extends BaseMapper<Students> {
      * @return 学生列表
      */
     List<Students> selectStudentsByCounselorId(@Param("counselorId") Long counselorId);
+
+
+    /**
+     * 添加学生
+     * @param student 学生信息
+     * @return 添加结果
+     */
+    int insertStudent(Students student);
 }
 
 

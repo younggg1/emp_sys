@@ -69,12 +69,7 @@
               @click="handleEdit(scope.row)"
               :disabled="scope.row.role === 'admin'"
             >编辑</el-button>
-            <el-button 
-              type="primary" 
-              link 
-              @click="resetPassword(scope.row)"
-              :disabled="scope.row.role === 'admin'"
-            >重置密码</el-button>
+            
             <el-button 
               type="danger" 
               link 
@@ -119,13 +114,13 @@
         <el-form-item label="专业" prop="major">
           <el-input v-model="studentForm.major" placeholder="请输入专业"></el-input>
         </el-form-item>
-        <el-form-item label="辅导员" prop="counselorId">
-          <el-select v-model="studentForm.counselorId" placeholder="请选择辅导员" style="width: 100%">
+        <el-form-item label="辅导员" prop="counselor_id">
+          <el-select v-model="studentForm.counselor_id" placeholder="请选择辅导员" style="width: 100%">
             <el-option
               v-for="item in counselorList"
-              :key="item.counselorId"
+              :key="item.counselor_id"
               :label="item.name"
-              :value="item.counselorId"
+              :value="item.counselor_id"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -164,7 +159,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, addCounselor } from '@/api/admin'
+import { getUserList, addCounselor , getCounselorList ,addStudent} from '@/api/admin'
 
 // 筛选表单
 const filterForm = reactive({
@@ -196,7 +191,7 @@ const studentForm = reactive({
   className: '',
   college: '',
   major: '',
-  counselorId: ''
+  counselor_id: ''
 })
 
 // 辅导员表单数据
@@ -284,12 +279,18 @@ const fetchUserList = async () => {
 }
 
 // 获取辅导员列表
-const fetchCounselorList = () => {
-  // 这里应该是从API获取数据
-  counselorList.value = [
-    { counselorId: 1, name: '王老师' },
-    { counselorId: 2, name: '李老师' }
-  ]
+const fetchCounselorList = async () => {
+  try {
+    const res = await getCounselorList()
+    if (res.code === 200) {
+      counselorList.value = res.data
+    } else {
+      ElMessage.error(res.msg || '获取辅导员列表失败')
+    }
+  } catch (error) {
+    console.error('获取辅导员列表失败:', error)
+    ElMessage.error('获取辅导员列表失败')
+  }
 }
 
 // 搜索处理
@@ -328,6 +329,7 @@ const showAddStudentDialog = () => {
     studentForm[key] = ''
   })
   addStudentDialogVisible.value = true
+  fetchCounselorList() 
 }
 
 // 显示添加辅导员对话框
@@ -340,16 +342,34 @@ const showAddCounselorDialog = () => {
 
 // 提交添加学生
 const submitAddStudent = () => {
-  studentFormRef.value.validate((valid) => {
+  studentFormRef.value.validate(async (valid) => {
     if (valid) {
       submitLoading.value = true
-      // 这里应该是调用API添加学生
-      setTimeout(() => {
-        ElMessage.success('添加学生成功')
-        addStudentDialogVisible.value = false
+      try {
+        const res = await addStudent({
+          username: studentForm.username,
+          password: studentForm.password,
+          name: studentForm.name,
+          grade: '2024', // 这里可以根据实际情况设置
+          className: studentForm.className,
+          college: studentForm.college,
+          major: studentForm.major,
+          counselor_id: studentForm.counselor_id
+        })
+        
+        if (res.code === 200) {
+          ElMessage.success('添加学生成功')
+          addStudentDialogVisible.value = false
+          fetchUserList()
+        } else {
+          ElMessage.error(res.msg || '添加学生失败')
+        }
+      } catch (error) {
+        console.error('添加学生失败:', error)
+        ElMessage.error('添加学生失败')
+      } finally {
         submitLoading.value = false
-        fetchUserList()
-      }, 500)
+      }
     }
   })
 }
