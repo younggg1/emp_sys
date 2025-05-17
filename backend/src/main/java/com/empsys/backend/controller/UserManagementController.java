@@ -79,4 +79,30 @@ public class UserManagementController {
         }
     }
 
+    /**
+     * 更新用户
+     */
+    @PutMapping("/updateUsers/{id}")
+    public Result<Boolean> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> userData) {
+        try {
+            boolean success = userManagementService.updateUser(id, userData);
+            return Result.success(success);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 删除用户
+     */
+    @DeleteMapping("/deleteUsers/{id}")
+    public Result<Boolean> deleteUser(@PathVariable Long id) {
+        try {
+            boolean success = userManagementService.deleteUser(id);
+            return Result.success(success);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
 } 

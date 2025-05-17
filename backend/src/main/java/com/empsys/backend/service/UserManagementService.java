@@ -43,5 +43,18 @@ public interface UserManagementService {
      */
     boolean addStudent(Map<String, Object> studentData);
 
-    
+    /**
+     * 更新用户
+     * @param id 用户ID
+     * @param userData 用户数据
+     * @return 是否更新成功
+     */
+    boolean updateUser(Long id, Map<String, Object> userData);
+
+    /**
+     * 删除用户
+     * @param id 用户ID
+     * @return 是否删除成功
+     */
+    boolean deleteUser(Long id);
 } 

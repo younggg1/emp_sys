@@ -104,4 +104,19 @@
         FROM counselors c
         ORDER BY c.counselor_id ASC
     </select>
+
+
+    <!-- 更新辅导员 -->
+    <update id="updateCounselor" parameterType="com.empsys.backend.entity.Counselors">
+        UPDATE counselors
+        SET name = #{name},
+            updated_at = NOW()
+        WHERE counselor_id = #{counselor_id}
+    </update>
+
+    <!-- 删除辅导员 -->
+    <delete id="deleteCounselor">
+        DELETE FROM counselors
+        WHERE counselor_id = #{id}
+    </delete>
 </mapper> 

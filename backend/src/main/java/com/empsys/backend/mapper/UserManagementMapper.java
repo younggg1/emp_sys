@@ -48,4 +48,19 @@ public interface UserManagementMapper extends BaseMapper<Users> {
      * @return 辅导员列表
      */
     List<Map<String, Object>> selectCounselorList();
+
+
+    /**
+     * 更新辅导员
+     * @param counselor 辅导员信息
+     * @return 更新结果
+     */
+    int updateCounselor(Counselors counselor);
+
+    /**
+     * 删除辅导员
+     * @param id 辅导员ID
+     * @return 删除结果
+     */
+    int deleteCounselor(@Param("id") Long id);
 } 

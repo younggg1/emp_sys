@@ -128,7 +128,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         student.setStudent_id(user.getUser_id());
         student.setName((String) studentData.get("name"));
         student.setGrade((String) studentData.get("grade"));
-        student.setClass_name((String) studentData.get("className"));
+        student.setClass_name((String) studentData.get("class_name"));
         student.setCollege((String) studentData.get("college"));
         student.setMajor((String) studentData.get("major"));
         // 添加空值检查
@@ -148,4 +148,83 @@ public class UserManagementServiceImpl implements UserManagementService {
         return true;
     }
 
+
+    @Override
+    @Transactional
+    public boolean updateUser(Long id, Map<String, Object> userData) {
+        // 1. 获取用户信息
+        Users user = userManagementMapper.selectById(id);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 2. 根据角色更新不同的信息
+        if ("student".equals(user.getRole())) {
+            // 更新学生信息
+            Students student = new Students();
+            student.setStudent_id(id);
+            student.setName((String) userData.get("name"));
+            student.setClass_name((String) userData.get("class_name"));
+            student.setCollege((String) userData.get("college"));
+            student.setMajor((String) userData.get("major"));
+            student.setCounselor_id(Long.valueOf(userData.get("counselor_id").toString()));
+
+            boolean studentUpdated = studentsMapper.updateById(student) > 0;
+            if (!studentUpdated) {
+                throw new RuntimeException("更新学生信息失败");
+            }
+        } else if ("counselor".equals(user.getRole())) {
+            // 更新辅导员信息
+            Counselors counselor = new Counselors();
+            counselor.setCounselor_id(id);
+            counselor.setName((String) userData.get("name"));
+
+            boolean counselorUpdated = userManagementMapper.updateCounselor(counselor) > 0;
+            if (!counselorUpdated) {
+                throw new RuntimeException("更新辅导员信息失败");
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteUser(Long id) {
+        // 1. 获取用户信息
+        Users user = userManagementMapper.selectById(id);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 2. 根据角色删除不同的信息
+        if ("student".equals(user.getRole())) {
+            // 删除学生信息
+            boolean studentDeleted = studentsMapper.deleteById(id) > 0;
+            if (!studentDeleted) {
+                throw new RuntimeException("删除学生信息失败");
+            }
+        } else if ("counselor".equals(user.getRole())) {
+            // 检查是否有学生关联该辅导员
+            LambdaQueryWrapper<Students> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Students::getCounselor_id, id);
+            if (studentsMapper.selectCount(queryWrapper) > 0) {
+                throw new RuntimeException("该辅导员下还有学生，无法删除");
+            }
+
+            // 删除辅导员信息
+            boolean counselorDeleted = userManagementMapper.deleteCounselor(id) > 0;
+            if (!counselorDeleted) {
+                throw new RuntimeException("删除辅导员信息失败");
+            }
+        }
+
+        // 3. 删除用户信息
+        boolean userDeleted = userManagementMapper.deleteById(id) > 0;
+        if (!userDeleted) {
+            throw new RuntimeException("删除用户信息失败");
+        }
+
+        return true;
+    }
 } 

@@ -170,7 +170,7 @@ export function addUser(data) {
 // 更新用户
 export function updateUser(id, data) {
   return request({
-    url: `/api/admin/users/${id}`,
+    url: `/api/admin/updateUsers/${id}`,
     method: 'put',
     data
   })
@@ -179,21 +179,12 @@ export function updateUser(id, data) {
 // 删除用户
 export function deleteUser(id) {
   return request({
-    url: `/api/admin/users/${id}`,
+    url: `/api/admin/deleteUsers/${id}`,
     method: 'delete'
   })
 }
 
-// 重置用户密码
-export function resetUserPassword(id, newPassword) {
-  return request({
-    url: `/api/admin/users/${id}/reset-password`,
-    method: 'post',
-    data: {
-      new_password: newPassword
-    }
-  })
-}
+
 
 // 获取系统设置
 export function getSystemSettings() {

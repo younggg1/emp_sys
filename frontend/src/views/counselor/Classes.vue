@@ -77,7 +77,7 @@ import { getUserId } from '@/utils/user'
 const columns = [
   { prop: 'studentId', label: '学号', width: '120' },
   { prop: 'name', label: '姓名', width: '100' },
-  { prop: 'grade', label: '年级', width: '100' },
+  // { prop: 'grade', label: '年级', width: '100' },
   { prop: 'class_name', label: '班级' },
   { prop: 'college', label: '学院' },
   { prop: 'major', label: '专业' },
