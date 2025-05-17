@@ -1,107 +1,123 @@
-CREATE DATABASE IF NOT EXISTS employment_survey;
-USE employment_survey;
+-- --------------------------------------------------------
+-- 主机:                           127.0.0.1
+-- 服务器版本:                        9.0.1 - MySQL Community Server - GPL
+-- 服务器操作系统:                      Win64
+-- HeidiSQL 版本:                  12.10.0.7000
+-- --------------------------------------------------------
 
--- 用户表
--- 说明：存储所有用户（学生、辅导员、管理员）的登录信息，主键自增
-CREATE TABLE users (
-    user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
-    role ENUM('student', 'counselor', 'admin') NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- 学生信息表
--- 说明：存储学生详细信息，姓名和专业在此表维护，主键自增
-CREATE TABLE students (
-    student_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL,
-    grade VARCHAR(10) NOT NULL,
-    class_name VARCHAR(50) NOT NULL,
-    college VARCHAR(50) NOT NULL,
-    major VARCHAR(50) NOT NULL,
-    counselor_id BIGINT NOT NULL,
-    employment_status ENUM('unemployed', 'employed') NOT NULL DEFAULT 'unemployed',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (counselor_id) REFERENCES users(user_id) ON DELETE RESTRICT,
-    INDEX idx_counselor_id (counselor_id),
-    INDEX idx_grade (grade)
-);
 
--- 辅导员信息表
--- 说明：存储辅导员信息，关联users表，主键自增
-CREATE TABLE counselors (
-    counselor_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (counselor_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+-- 导出 employment_survey 的数据库结构
+CREATE DATABASE IF NOT EXISTS `employment_survey` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `employment_survey`;
 
--- 就业信息表
--- 说明：存储学生就业信息，去掉name和major（从students表获取），学生只能登记和查看自己的记录（通过student_id限制），主键自增
-CREATE TABLE employment_records (
-    record_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    student_id BIGINT NOT NULL,
-    company_nature VARCHAR(50) NOT NULL,
-    company VARCHAR(100) NOT NULL,
-    position VARCHAR(50) NOT NULL,
-    salary DECIMAL(10,2) NOT NULL,
-    entry_date DATE NOT NULL,
-    region VARCHAR(50) NOT NULL,
-    status ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    INDEX idx_student_id (student_id),
-    INDEX idx_region (region)
-);
+-- 导出  表 employment_survey.counselors 结构
+CREATE TABLE IF NOT EXISTS `counselors` (
+  `counselor_id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `permission` enum('Y','N') NOT NULL DEFAULT 'N',
+  PRIMARY KEY (`counselor_id`),
+  CONSTRAINT `counselors_ibfk_1` FOREIGN KEY (`counselor_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 反馈信息表
--- 说明：存储学生反馈，学生只能登记和查看自己的反馈（通过student_id限制），需已就业，主键自增
-CREATE TABLE feedback_records (
-    feedback_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    student_id BIGINT NOT NULL,
-    stage VARCHAR(50) NOT NULL,
-    content TEXT NOT NULL,
-    status ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    INDEX idx_student_id (student_id)
-);
+-- 数据导出被取消选择。
 
--- 权限表
--- 说明：存储辅导员权限，控制本班数据的编辑和删除，主键自增
-CREATE TABLE permissions (
-    permission_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    can_edit BOOLEAN NOT NULL DEFAULT FALSE,
-    can_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id)
-);
+-- 导出  表 employment_survey.employment_records 结构
+CREATE TABLE IF NOT EXISTS `employment_records` (
+  `record_id` bigint NOT NULL AUTO_INCREMENT,
+  `student_id` bigint NOT NULL,
+  `company_nature` varchar(50) NOT NULL,
+  `company` varchar(100) NOT NULL,
+  `position` varchar(50) NOT NULL,
+  `salary` decimal(10,2) NOT NULL,
+  `entry_date` date NOT NULL,
+  `region` varchar(50) NOT NULL,
+  `status` enum('pending','approved') NOT NULL DEFAULT 'pending',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`record_id`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_region` (`region`),
+  CONSTRAINT `employment_records_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 系统设置表
--- 说明：控制验证码和审核开关，主键自增
-CREATE TABLE system_settings (
-    setting_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    require_captcha BOOLEAN NOT NULL DEFAULT TRUE,
-    require_approval BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- 数据导出被取消选择。
 
--- 插入测试数据
-INSERT INTO system_settings (require_captcha, require_approval) VALUES (TRUE, TRUE);
-INSERT INTO users (username, password, role) VALUES ('admin1', '123456', 'admin');
-INSERT INTO users (username, password, role) VALUES ('counselor1', '123456', 'counselor');
-INSERT INTO counselors (name, counselor_id) VALUES ('张老师', LAST_INSERT_ID());
-INSERT INTO users (username, password, role) VALUES ('student1', '123456', 'student');
-INSERT INTO students (name, grade, class_name, college, major, counselor_id, employment_status)
-VALUES ('李明', '2023', '计算机1班', '计算机学院', '计算机科学', 2, 'unemployed');
+-- 导出  表 employment_survey.feedback_records 结构
+CREATE TABLE IF NOT EXISTS `feedback_records` (
+  `feedback_id` bigint NOT NULL AUTO_INCREMENT,
+  `student_id` bigint NOT NULL,
+  `stage` varchar(50) NOT NULL,
+  `content` text NOT NULL,
+  `status` enum('pending','approved') NOT NULL DEFAULT 'pending',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`feedback_id`),
+  KEY `idx_student_id` (`student_id`),
+  CONSTRAINT `feedback_records_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 数据导出被取消选择。
+
+-- 导出  表 employment_survey.students 结构
+CREATE TABLE IF NOT EXISTS `students` (
+  `student_id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `grade` varchar(10) NOT NULL,
+  `class_name` varchar(50) NOT NULL,
+  `college` varchar(50) NOT NULL,
+  `major` varchar(50) NOT NULL,
+  `counselor_id` bigint NOT NULL,
+  `employment_status` enum('unemployed','employed') NOT NULL DEFAULT 'unemployed',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`student_id`),
+  KEY `idx_counselor_id` (`counselor_id`),
+  KEY `idx_grade` (`grade`),
+  CONSTRAINT `students_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `students_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 数据导出被取消选择。
+
+-- 导出  表 employment_survey.system_settings 结构
+CREATE TABLE IF NOT EXISTS `system_settings` (
+  `setting_id` bigint NOT NULL AUTO_INCREMENT,
+  `require_captcha` tinyint(1) NOT NULL DEFAULT '1',
+  `require_approval` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`setting_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 数据导出被取消选择。
+
+-- 导出  表 employment_survey.users 结构
+CREATE TABLE IF NOT EXISTS `users` (
+  `user_id` bigint NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(100) NOT NULL,
+  `role` enum('student','counselor','admin') NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 数据导出被取消选择。
+
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
