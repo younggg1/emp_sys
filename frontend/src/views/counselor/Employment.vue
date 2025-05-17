@@ -48,6 +48,7 @@
           <el-button 
             size="small" 
             type="danger" 
+            :disabled="!hasDeletePermission"
             @click="handleDelete(row)"
           >
             <el-icon><delete /></el-icon> 删除
@@ -63,7 +64,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Briefcase, Search, Delete, Check } from '@element-plus/icons-vue'
 import DataTable from '@/components/DataTable.vue'
-import { getEmploymentRecords, deleteEmployment, getStudents, approveEmployment } from '@/api/counselor'
+import { getEmploymentRecords, deleteEmployment, getStudents, approveEmployment, getCounselorListWithUserInfo } from '@/api/counselor'
 import { getUserId } from '@/utils/user'
 
 // 表格列定义
@@ -86,6 +87,7 @@ const employmentList = ref([])
 const students = ref([])
 const searchText = ref('')
 const filterStatus = ref('')
+const hasDeletePermission = ref(false)
 
 // 过滤后的就业信息列表
 const filteredEmployment = computed(() => {
@@ -155,6 +157,25 @@ const fetchStudents = async () => {
     }
   } catch (error) {
     ElMessage.error(error.message || '获取学生列表失败')
+  }
+}
+
+// 获取辅导员权限
+const fetchCounselorPermission = async () => {
+  try {
+    const counselorId = getUserId()
+    if (!counselorId) {
+      ElMessage.error('用户未登录或登录信息已失效')
+      return
+    }
+    
+    const res = await getCounselorListWithUserInfo()
+    if (res.code === 200) {
+      const currentCounselor = res.data.find(c => c.counselor_id === counselorId)
+      hasDeletePermission.value = currentCounselor?.permission === 'Y'
+    }
+  } catch (error) {
+    console.error('获取辅导员权限失败:', error)
   }
 }
 
@@ -232,6 +253,7 @@ const handleSearch = () => {
 onMounted(() => {
   fetchEmploymentRecords()
   fetchStudents()
+  fetchCounselorPermission()
 })
 </script>
 

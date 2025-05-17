@@ -106,3 +106,11 @@ export function approveEmployment(id, data) {
     params: data
   })
 }
+
+// 获取辅导员列表（包含权限信息）
+export function getCounselorListWithUserInfo() {
+  return request({
+    url: '/api/counselor/listWithUserInfo',
+    method: 'get'
+  })
+}
