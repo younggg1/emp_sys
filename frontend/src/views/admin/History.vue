@@ -4,11 +4,26 @@
       <template #header>
         <div class="card-header">
           <span>就业信息列表</span>
+          <div class="search-box">
+            <el-input
+              v-model="selectedYear"
+              placeholder="请输入年份（如：2024）"
+              style="width: 300px;"
+              @keyup.enter="handleYearChange"
+              clearable
+            >
+              <template #append>
+                <el-button @click="handleYearChange">
+                  <el-icon><search /></el-icon>
+                </el-button>
+              </template>
+            </el-input>
+          </div>
         </div>
       </template>
       <el-table
         v-loading="loading"
-        :data="tableData"
+        :data="filteredTableData"
         border
         style="width: 100%"
       >
@@ -34,13 +49,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, Search } from '@element-plus/icons-vue'
 import { getHistoryData, deleteHistoryData } from '@/api/admin'
 
 const tableData = ref([])
 const loading = ref(false)
+const selectedYear = ref('')
+
+// 根据选择的年份筛选数据
+const filteredTableData = computed(() => {
+  if (!selectedYear.value) {
+    return tableData.value
+  }
+  return tableData.value.filter(item => {
+    const entryDate = new Date(item.entry_date)
+    return entryDate.getFullYear().toString() === selectedYear.value
+  })
+})
 
 const fetchData = async () => {
   loading.value = true
@@ -57,6 +84,24 @@ const fetchData = async () => {
     ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 处理年份变化
+const handleYearChange = () => {
+  // 验证年份格式
+  const yearRegex = /^\d{4}$/
+  if (selectedYear.value && !yearRegex.test(selectedYear.value)) {
+    ElMessage.warning('请输入正确的年份格式（如：2024）')
+    return
+  }
+  
+  // 验证年份范围
+  const currentYear = new Date().getFullYear()
+  const inputYear = parseInt(selectedYear.value)
+  if (selectedYear.value && (inputYear < 2000 || inputYear > currentYear)) {
+    ElMessage.warning(`年份范围应在2000-${currentYear}之间`)
+    return
   }
 }
 
@@ -92,6 +137,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 320px;
 }
 :deep(.el-card__header) {
   padding: 16px 20px;
