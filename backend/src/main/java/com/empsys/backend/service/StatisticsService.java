@@ -9,6 +9,12 @@ import java.util.Map;
 public interface StatisticsService {
     
     /**
+     * 获取基础统计数据
+     * @return 基础统计数据
+     */
+    Map<String, Object> getBasicStats();
+    
+    /**
      * 获取企业性质分布统计
      * @param year 年份（可选）
      * @return 企业性质分布数据

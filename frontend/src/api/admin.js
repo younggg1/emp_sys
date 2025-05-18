@@ -22,8 +22,6 @@ export const getEmploymentRecordsAsync = async (year) => {
   }
 }
 
-
-
 // 获取就业分布统计
 export const getDistributionStatisticsAsync = async (type, year) => {
   try {
@@ -60,10 +58,6 @@ export function getEmploymentRecords(params) {
     params
   })
 }
-
-
-
-
 
 // 删除就业信息
 export function deleteEmployment(id) {
@@ -147,8 +141,6 @@ export function deleteHistoryData(id) {
   })
 }
 
-
-
 // 获取用户列表
 export function getUserList(params) {
   return request({
@@ -184,8 +176,6 @@ export function deleteUser(id) {
   })
 }
 
-
-
 // 获取系统设置
 export function getSystemSettings() {
   return request({
@@ -202,8 +192,6 @@ export function updateSystemSettings(data) {
     data
   })
 }
-
-
 
 // 更新系统设置
 export const updateSettings = async (requireCaptcha, requireApproval) => {
@@ -222,7 +210,13 @@ export const updateSettings = async (requireCaptcha, requireApproval) => {
   }
 }
 
-
+// 获取基础统计数据
+export function getBasicStats() {
+  return request({
+    url: '/api/admin/statistics/basic',
+    method: 'get'
+  })
+}
 
 // 获取企业性质分布统计
 export function getCompanyNatureStats(year) {
@@ -249,7 +243,7 @@ export function getRegionStats(year) {
     method: 'get',
     params: { year }
   })
-} 
+}
 
 // 添加辅导员
 export function addCounselor(data) {
@@ -290,7 +284,6 @@ export function updatePermission(userId, data) {
     method: 'put'
   })
 }
-
 
 // 获取辅导员完整信息列表
 export function getCounselorListWithUserInfo() {

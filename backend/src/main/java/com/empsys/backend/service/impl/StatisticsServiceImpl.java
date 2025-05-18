@@ -18,6 +18,21 @@ public class StatisticsServiceImpl implements StatisticsService {
     private StatisticsMapper statisticsMapper;
 
     @Override
+    public Map<String, Object> getBasicStats() {
+        Map<String, Object> stats = statisticsMapper.getBasicStats();
+        
+        // 计算就业率
+        int totalStudents = ((Number) stats.get("total_students")).intValue();
+        int totalEmployed = ((Number) stats.get("total_employed")).intValue();
+        double employmentRate = totalStudents > 0 ? 
+            (double) totalEmployed / totalStudents * 100 : 0;
+        
+        stats.put("employment_rate", Math.round(employmentRate * 100) / 100.0);
+        
+        return stats;
+    }
+
+    @Override
     public List<Map<String, Object>> getCompanyNatureStats(String year) {
         return statisticsMapper.getCompanyNatureStats(year);
     }

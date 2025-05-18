@@ -19,6 +19,20 @@ public class AdminStatisticsController {
     private StatisticsService statisticsService;
 
     /**
+     * 获取基础统计数据
+     * @return 基础统计数据
+     */
+    @GetMapping("/basic")
+    public Result<Map<String, Object>> getBasicStats() {
+        try {
+            Map<String, Object> data = statisticsService.getBasicStats();
+            return Result.success(data);
+        } catch (Exception e) {
+            return Result.error("获取基础统计数据失败");
+        }
+    }
+
+    /**
      * 获取企业性质分布统计
      * @param year 年份（可选）
      * @return 企业性质分布数据

@@ -78,7 +78,7 @@
 import { ref, onMounted } from 'vue'
 import { ArrowUp, ArrowDown, Search } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
-import { getCompanyNatureStats, getSalaryStats, getRegionStats } from '@/api/admin'
+import { getCompanyNatureStats, getSalaryStats, getRegionStats, getBasicStats } from '@/api/admin'
 import { ElMessage } from 'element-plus'
 
 // 年份输入
@@ -232,93 +232,72 @@ const initCharts = () => {
 
 // 获取数据并更新图表
 const fetchAndUpdateData = async () => {
-  if (!yearFilter.value || !/^\d{4}$/.test(yearFilter.value)) {
-    ElMessage.warning('请输入正确的年份格式（如：2023）')
-    return
-  }
-
   try {
-    // 获取企业性质分布数据
-    const companyNatureResponse = await getCompanyNatureStats(yearFilter.value)
-    const salaryResponse = await getSalaryStats(yearFilter.value)
-    const regionResponse = await getRegionStats(yearFilter.value)
+    // 获取基础统计数据
+    const basicStatsResponse = await getBasicStats();
+    const basicStats = basicStatsResponse.data;
+    
+    // 更新概览数据
+    summaryData.value = [
+      { 
+        label: '毕业生总数', 
+        value: `${basicStats.total_students}人`, 
+        trend: 0 
+      },
+      { 
+        label: '就业人数', 
+        value: `${basicStats.total_employed}人`, 
+        trend: 0 
+      },
+      { 
+        label: '就业率', 
+        value: `${basicStats.employment_rate}%`, 
+        trend: 0 
+      },
+      { 
+        label: '平均薪资', 
+        value: `${Math.round(basicStats.avg_salary)}元`, 
+        trend: 0 
+      }
+    ]
+
+    // 获取并更新图表数据
+    const [companyNatureResponse, salaryResponse, regionResponse] = await Promise.all([
+      getCompanyNatureStats(yearFilter.value),
+      getSalaryStats(yearFilter.value),
+      getRegionStats(yearFilter.value)
+    ])
 
     // 更新企业性质分布图表
     if (companyNatureResponse.data && Array.isArray(companyNatureResponse.data)) {
-      const companyData = companyNatureResponse.data.map(item => ({
-        name: item.name,
-        value: item.value || 0
-      }))
       companyChart.setOption({
         series: [{
-          data: companyData
+          data: companyNatureResponse.data
         }]
       })
     }
 
     // 更新薪资分布图表
     if (salaryResponse.data && Array.isArray(salaryResponse.data)) {
-      const salaryData = salaryResponse.data.map(item => ({
-        name: item.name,
-        value: item.value || 0
-      }))
       salaryChart.setOption({
         series: [{
-          data: salaryData
+          data: salaryResponse.data
         }]
       })
     }
 
     // 更新地区分布图表
     if (regionResponse.data && Array.isArray(regionResponse.data)) {
-      const regionData = regionResponse.data.map(item => ({
-        name: item.name,
-        value: item.value || 0
-      }))
       regionChart.setOption({
         series: [{
-          data: regionData
+          data: regionResponse.data
         }]
       })
     }
-
-    // 更新概览数据
-    updateSummaryData(
-      companyNatureResponse.data,
-      salaryResponse.data,
-      regionResponse.data
-    )
   } catch (error) {
     console.error('获取统计数据失败:', error)
     ElMessage.error(error.response?.data?.message || '获取统计数据失败，请稍后重试')
   }
-}
-
-// 更新概览数据
-const updateSummaryData = (companyNatureData, salaryData, regionData) => {
-  if (!companyNatureData || !salaryData || !regionData) {
-    return
-  }
-
-  // 计算总就业人数
-  const totalEmployed = companyNatureData.reduce((sum, item) => sum + (item.value || 0), 0)
-  
-  // 计算总薪资
-  const totalSalary = salaryData.reduce((sum, item) => sum + (item.value || 0), 0)
-  
-  // 计算平均薪资
-  const avgSalary = totalEmployed > 0 ? Math.round(totalSalary / totalEmployed) : 0
-  
-  // 计算就业率（假设毕业生总数是就业人数的1.2倍，这个比例可以根据实际情况调整）
-  const totalGraduates = Math.round(totalEmployed * 1.2)
-  const employmentRate = totalGraduates > 0 ? Math.round((totalEmployed / totalGraduates) * 100) : 0
-  
-  summaryData.value = [
-    { label: '毕业生总数', value: `${totalGraduates}人`, trend: 0 },
-    { label: '就业人数', value: `${totalEmployed}人`, trend: 0 },
-    { label: '就业率', value: `${employmentRate}%`, trend: 0 },
-    { label: '平均薪资', value: `${avgSalary}元`, trend: 0 }
-  ]
 }
 
 // 生成随机颜色
