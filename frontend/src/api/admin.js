@@ -211,10 +211,11 @@ export const updateSettings = async (requireCaptcha, requireApproval) => {
 }
 
 // 获取基础统计数据
-export function getBasicStats() {
+export function getBasicStats(year) {
   return request({
     url: '/api/admin/statistics/basic',
-    method: 'get'
+    method: 'get',
+    params: { year }
   })
 }
 

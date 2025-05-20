@@ -234,29 +234,32 @@ const initCharts = () => {
 const fetchAndUpdateData = async () => {
   try {
     // 获取基础统计数据
-    const basicStatsResponse = await getBasicStats();
+    const basicStatsResponse = await getBasicStats(yearFilter.value);
+    if (!basicStatsResponse || !basicStatsResponse.data) {
+      throw new Error('获取基础统计数据失败');
+    }
     const basicStats = basicStatsResponse.data;
     
     // 更新概览数据
     summaryData.value = [
       { 
         label: '毕业生总数', 
-        value: `${basicStats.total_students}人`, 
+        value: `${basicStats.total_students || 0}人`, 
         trend: 0 
       },
       { 
         label: '就业人数', 
-        value: `${basicStats.total_employed}人`, 
+        value: `${basicStats.total_employed || 0}人`, 
         trend: 0 
       },
       { 
         label: '就业率', 
-        value: `${basicStats.employment_rate}%`, 
+        value: `${basicStats.employment_rate || 0}%`, 
         trend: 0 
       },
       { 
         label: '平均薪资', 
-        value: `${Math.round(basicStats.avg_salary)}元`, 
+        value: `${Math.round(basicStats.avg_salary || 0)}元`, 
         trend: 0 
       }
     ]
@@ -296,7 +299,12 @@ const fetchAndUpdateData = async () => {
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
-    ElMessage.error(error.response?.data?.message || '获取统计数据失败，请稍后重试')
+    // 只显示一次错误信息
+    if (error.response?.data?.message) {
+      ElMessage.error(error.response.data.message)
+    } else {
+      ElMessage.error('获取统计数据失败，请稍后重试')
+    }
   }
 }
 

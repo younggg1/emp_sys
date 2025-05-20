@@ -13,9 +13,10 @@ public interface StatisticsMapper {
     
     /**
      * 获取基础统计数据
+     * @param year 年份
      * @return 基础统计数据
      */
-    Map<String, Object> getBasicStats();
+    Map<String, Object> getBasicStats(@Param("year") String year);
     
     /**
      * 获取企业性质分布统计

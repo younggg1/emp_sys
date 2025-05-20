@@ -2,6 +2,8 @@ package com.empsys.backend.controller;
 
 import com.empsys.backend.service.StatisticsService;
 import com.empsys.backend.config.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,20 +17,26 @@ import java.util.Map;
 @RequestMapping("/api/admin/statistics")
 public class AdminStatisticsController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdminStatisticsController.class);
+
     @Autowired
     private StatisticsService statisticsService;
 
     /**
      * 获取基础统计数据
+     * @param year 年份
      * @return 基础统计数据
      */
     @GetMapping("/basic")
-    public Result<Map<String, Object>> getBasicStats() {
+    public Result<Map<String, Object>> getBasicStats(@RequestParam(required = false) String year) {
         try {
-            Map<String, Object> data = statisticsService.getBasicStats();
+            logger.info("获取基础统计数据，年份：{}", year);
+            Map<String, Object> data = statisticsService.getBasicStats(year);
+            logger.info("获取基础统计数据成功：{}", data);
             return Result.success(data);
         } catch (Exception e) {
-            return Result.error("获取基础统计数据失败");
+            logger.error("获取基础统计数据失败", e);
+            return Result.error("获取基础统计数据失败：" + e.getMessage());
         }
     }
 
