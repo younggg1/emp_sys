@@ -82,7 +82,7 @@ import { getCompanyNatureStats, getSalaryStats, getRegionStats, getBasicStats } 
 import { ElMessage } from 'element-plus'
 
 // 年份输入
-const yearFilter = ref('2025')
+const yearFilter = ref('')
 
 // 概览数据
 const summaryData = ref([

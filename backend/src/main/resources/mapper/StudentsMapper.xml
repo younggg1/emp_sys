@@ -7,7 +7,7 @@
     <resultMap id="BaseResultMap" type="com.empsys.backend.entity.Students">
             <id property="student_id" column="student_id" jdbcType="BIGINT"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>
-            <result property="grade" column="grade" jdbcType="VARCHAR"/>
+
             <result property="class_name" column="class_name" jdbcType="VARCHAR"/>
             <result property="college" column="college" jdbcType="VARCHAR"/>
             <result property="major" column="major" jdbcType="VARCHAR"/>
@@ -20,7 +20,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        student_id,name,grade,
+        student_id,name,
         class_name,college,major,
         counselor_id,employment_status,created_at,
         updated_at
@@ -58,7 +58,7 @@
         WHERE 
             s.counselor_id = #{counselorId}
         ORDER BY
-            s.grade, s.class_name, s.name
+             s.class_name, s.name
     </select>
 
 
@@ -68,7 +68,7 @@
         INSERT INTO students (
             student_id,
             name,
-            grade,
+
             class_name,
             college,
             major,
@@ -79,7 +79,7 @@
         ) VALUES (
                      #{student_id},
                      #{name},
-                     #{grade},
+
                      #{class_name},
                      #{college},
                      #{major},

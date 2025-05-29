@@ -127,7 +127,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         Students student = new Students();
         student.setStudent_id(user.getUser_id());
         student.setName((String) studentData.get("name"));
-        student.setGrade((String) studentData.get("grade"));
+//        student.setGrade((String) studentData.get("grade"));
         student.setClass_name((String) studentData.get("class_name"));
         student.setCollege((String) studentData.get("college"));
         student.setMajor((String) studentData.get("major"));
